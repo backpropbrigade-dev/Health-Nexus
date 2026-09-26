@@ -1,0 +1,5 @@
+# Ignore local configuration files with sensitive API keys
+env.js
+
+node_modules/
+dist/

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthNexus — The Nexus of Life | 24/7 Smart Health</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="env.js"></script>
+</head>
+
+<body class="landing-nexus">
+    <div id="navbar-placeholder"></div>
+
+    <section id="view-home" class="view-section active">
+        <!-- Hero: Nexus of Life -->
+        <header class="hero nexus-hero" id="top">
+            <div class="nexus-hero-bg" aria-hidden="true">
+                <div class="nexus-grid"></div>
+                <div class="nexus-bokeh">
+                    <span></span><span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <div class="nexus-hero-orb nexus-hero-orb--cyan"></div>
+                <div class="nexus-hero-orb nexus-hero-orb--magenta"></div>
+            </div>
+
+            <div class="nexus-hero-inner">
+                <div class="nexus-hero-copy scroll-reveal">
+                    <span class="nexus-badge">Next Generation Care</span>
+                    <h1 class="nexus-hero-title">24/7 Smart Health Tracking &amp; Patient Care Platform</h1>
+                    <p class="nexus-hero-desc">HealthNexus integrates modern technology with compassionate care to deliver seamless emergency support, smart reminders, and virtual doctor consultations — all in one place.</p>
+                    <div class="hero-buttons nexus-hero-ctas">
+                        <button type="button" class="nexus-btn nexus-btn--primary" onclick="app.navigate('login', 'hospital')">
+                            <i class="fa-solid fa-user-doctor"></i> Login as Hospital
+                        </button>
+                        <button type="button" class="nexus-btn nexus-btn--glass" onclick="app.navigate('login', 'patient')">
+                            <i class="fa-solid fa-user-injured"></i> Login as Patient
+                        </button>
+                    </div>
+                    <p class="nexus-hero-tags">
+                        <span>Real-time Monitoring</span>
+                        <span class="nexus-tag-dot" aria-hidden="true"></span>
+                        <span>Secure Data</span>
+                        <span class="nexus-tag-dot" aria-hidden="true"></span>
+                        <span>AI Assisted</span>
+                    </p>
+                </div>
+
+                <div class="nexus-hero-visual scroll-reveal">
+                    <div class="nexus-hero-photo-wrap">
+                        <div class="nexus-hero-photo-glow" aria-hidden="true"></div>
+                        <div class="nexus-hero-photo-frame">
+                            <img
+                                class="nexus-hero-photo"
+                                src="assets/hero-holographic-dashboard.png"
+                                width="960"
+                                height="720"
+                                alt="Futuristic HealthNexus holographic health dashboard with vitals, AI assistant, and care services"
+                                loading="eager"
+                                decoding="async"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mission -->
+        <section id="about" class="about-section nexus-about">
+            <div class="nexus-about-inner">
+                <div class="about-visual-nexus scroll-reveal">
+                    <div class="nexus-about-glass-stack">
+                        <div class="nexus-stack-card nexus-stack-card--1"></div>
+                        <div class="nexus-stack-card nexus-stack-card--2"></div>
+                        <div class="nexus-stack-card nexus-stack-card--3">
+                            <i data-lucide="activity" class="nexus-lucide"></i>
+                            <span>Nexus Core</span>
+                        </div>
+                    </div>
+                    <div class="graphic-glow nexus-about-glow"></div>
+                </div>
+                <div class="about-info-right scroll-reveal">
+                    <p class="nexus-section-brand">HealthNexus Innovation</p>
+                    <span class="nexus-badge nexus-badge--ghost">Our Mission</span>
+                    <h2 class="about-title-premium nexus-about-heading">Bridging the Gap in Modern Healthcare</h2>
+                    <p class="about-description">HealthNexus was born from the vision that healthcare should be proactive, not reactive. We unite patients, clinicians, and emergency response in one intelligent network—so care moves at the speed of life.</p>
+                </div>
+            </div>
+
+            <div class="about-stats nexus-stats scroll-reveal">
+                <div class="stat-item nexus-stat">
+                    <span class="stat-number nexus-stat-glow">24/7</span>
+                    <span class="stat-label">Smart Monitoring</span>
+                </div>
+                <div class="stat-divider nexus-stat-divider"></div>
+                <div class="stat-item nexus-stat">
+                    <span class="stat-number nexus-stat-glow">200+</span>
+                    <span class="stat-label">Trusted Hospitals</span>
+                </div>
+                <div class="stat-divider nexus-stat-divider"></div>
+                <div class="stat-item nexus-stat">
+                    <span class="stat-number nexus-stat-glow">10k+</span>
+                    <span class="stat-label">Happy Patients</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portal flow -->
+        <section class="features-section nexus-features" id="features">
+            <div class="features-bg-grid nexus-features-grid"></div>
+            <div class="section-header nexus-section-head scroll-reveal">
+                <span class="nexus-eyebrow">Portal Flow</span>
+                <h2>One Platform. Three Powerful Solutions.</h2>
+                <p class="nexus-lead">Seamlessly bridging patients, emergency services, and hospitals.</p>
+            </div>
+            <div class="features-grid nexus-feature-grid">
+                <div class="feature-card scroll-reveal nexus-fcard">
+                    <div class="icon-glow g1"></div>
+                    <div class="icon-wrapper-premium p1"><i class="fa-solid fa-user-injured"></i></div>
+                    <h3>Smart Patient Portal</h3>
+                    <p>Real-time vitals, AI guidance, and always-on connectivity to your care team.</p>
+                    <ul class="feature-sub-list">
+                        <li><i class="fa-solid fa-circle-check"></i> Real-time vitals &amp; tracking</li>
+                        <li><i class="fa-solid fa-circle-check"></i> AI Symptom Assistant</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Smart Med Reminders</li>
+                    </ul>
+                    <button type="button" class="btn-card-action p1-btn" onclick="app.navigate('login', 'patient')">Access Patient Portal <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+
+                <div id="global-sos" class="feature-card scroll-reveal nexus-fcard nexus-fcard--sos">
+                    <div class="icon-glow g2"></div>
+                    <div class="icon-wrapper-premium p2"><i class="fa-solid fa-truck-medical"></i></div>
+                    <h3>Global Emergency SOS</h3>
+                    <p>One tap to alert services, sync the nearest hospital, and reach a virtual physician.</p>
+                    <ul class="feature-sub-list">
+                        <li><i class="fa-solid fa-circle-check"></i> One-Click SOS Alert</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Nearest Hospital Sync</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Virtual Doctor Connect</li>
+                    </ul>
+                    <button type="button" class="btn-card-action p2-btn" onclick="document.getElementById('dashboard-preview').scrollIntoView({ behavior: 'smooth', block: 'start' })">Learn More <i class="fa-solid fa-heart-pulse"></i></button>
+                </div>
+
+                <div class="feature-card scroll-reveal nexus-fcard">
+                    <div class="icon-glow g3"></div>
+                    <div class="icon-wrapper-premium p3"><i class="fa-solid fa-hospital"></i></div>
+                    <h3>Hospital Command Center</h3>
+                    <p>Command visibility across records, alerts, and analytics in one clinical workspace.</p>
+                    <ul class="feature-sub-list">
+                        <li><i class="fa-solid fa-circle-check"></i> Patient Record Access</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Real-time Health Alerts</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Medical Report Analytics</li>
+                    </ul>
+                    <button type="button" class="btn-card-action p3-btn" onclick="app.navigate('login', 'hospital')">Access Hospital Portal <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard preview -->
+        <section id="dashboard-preview" class="nexus-dash-preview">
+            <div class="nexus-dash-preview-bg" aria-hidden="true"></div>
+            <div class="nexus-dash-preview-inner">
+                <div class="section-header nexus-section-head scroll-reveal">
+                    <span class="nexus-eyebrow">Live Intelligence</span>
+                    <h2>Your Health, Visualized in Real Time</h2>
+                    <p class="nexus-lead">Floating analytics, ECG streams, and predictive signals—always on, always secure.</p>
+                </div>
+                <div class="nexus-dash-stage scroll-reveal">
+                    <div class="nexus-dash-panel nexus-dash-panel--main" data-nexus-parallax="0.04">
+                        <header class="nexus-dash-panel-head">
+                            <span>Vitals Overview</span>
+                            <span class="nexus-live-dot">LIVE</span>
+                        </header>
+                        <div class="nexus-dash-chart">
+                            <svg viewBox="0 0 400 120" preserveAspectRatio="none">
+                                <path fill="rgba(56,189,248,0.08)" stroke="none"
+                                    d="M0 100 L40 80 L80 95 L120 40 L160 70 L200 50 L240 85 L280 45 L320 75 L360 55 L400 65 L400 120 L0 120 Z"/>
+                                <path fill="none" stroke="#38BDF8" stroke-width="2"
+                                    d="M0 100 L40 80 L80 95 L120 40 L160 70 L200 50 L240 85 L280 45 L320 75 L360 55 L400 65"/>
+                            </svg>
+                        </div>
+                        <div class="nexus-dash-metrics">
+                            <div><small>BP</small><strong>115/75</strong></div>
+                            <div><small>Glucose</small><strong>98 <span>mg/dL</span></strong></div>
+                            <div><small>HRV</small><strong>42 <span>ms</span></strong></div>
+                        </div>
+                    </div>
+                    <div class="nexus-dash-panel nexus-dash-panel--ecg" data-nexus-parallax="0.1">
+                        <span class="nexus-dash-ecg-label">ECG Stream</span>
+                        <svg viewBox="0 0 280 60" preserveAspectRatio="none" class="nexus-dash-ecg-svg">
+                            <path class="nexus-dash-ecg-path" fill="none" stroke="#D946EF" stroke-width="1.5"
+                                d="M0 30 L30 30 L38 10 L46 50 L54 30 L280 30"/>
+                        </svg>
+                    </div>
+                    <div class="nexus-dash-panel nexus-dash-panel--side" data-nexus-parallax="0.07">
+                        <h4>AI Insight</h4>
+                        <p>Sleep quality trending <strong>+12%</strong> vs last week. Recovery on track.</p>
+                        <div class="nexus-ai-pill"><i class="fa-solid fa-wand-magic-sparkles"></i> Proactive</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="faq-section nexus-faq">
+            <div class="section-header nexus-section-head scroll-reveal">
+                <span class="nexus-eyebrow">FAQ</span>
+                <h2>Frequently Asked Questions</h2>
+                <p class="nexus-lead">Everything you need to know about monitoring, privacy, and global SOS.</p>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="app.toggleFaq(this)">
+                        <span>How does the 24/7 monitoring work?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Our platform uses advanced IoT sensors and wearable integration to continuously track vital signs and send real-time data to healthcare providers.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="app.toggleFaq(this)">
+                        <span>Is my health data secure and private?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, all health data is encrypted using industry-standard protocols and stored in secure, HIPAA-compliant servers.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="app.toggleFaq(this)">
+                        <span>How does the Global SOS feature work abroad?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Our SOS system uses global GPS tracking to locate the nearest registered hospital and emergency services, ensuring you receive help regardless of your location.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="app.toggleFaq(this)">
+                        <span>Can I sync data from my existing wearables?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Absolutely! HealthNexus supports integration with top wearable devices including Apple Watch, Fitbit, and Garmin to provide a seamless health tracking experience.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="app.toggleFaq(this)">
+                        <span>Is my data protected by international standards?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, HealthNexus employs end-to-end encryption and strictly complies with international health data protection standards like GDPR and HIPAA.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="components.js"></script>
+    <script type="module" src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            components.renderNavbar('home');
+            components.renderFooter();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const role = localStorage.getItem('nexus_user_role');
+            if (role) {
+                const dashUrl = role === 'hospital' ? 'hospital-dashboard.html' : 'patient-dashboard.html';
+                const dashName = role.charAt(0).toUpperCase() + role.slice(1);
+                const heroBtns = document.querySelector('.hero-buttons');
+                if (heroBtns) {
+                    heroBtns.innerHTML = `
+                        <a href="${dashUrl}" class="nexus-btn nexus-btn--primary" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;">
+                            <i class="fa-solid fa-gauge"></i> Return to ${dashName} Dashboard
+                        </a>
+                    `;
+                }
+                if (role === 'hospital') {
+                    const hospitalBtn = document.querySelector('.p3-btn');
+                    if (hospitalBtn) {
+                        hospitalBtn.innerHTML = `Go to Dashboard <i class="fa-solid fa-arrow-right"></i>`;
+                        hospitalBtn.onclick = () => { window.location.href = 'hospital-dashboard.html'; };
+                    }
+                } else {
+                    const patientBtn = document.querySelector('.p1-btn');
+                    if (patientBtn) {
+                        patientBtn.innerHTML = `Go to Dashboard <i class="fa-solid fa-arrow-right"></i>`;
+                        patientBtn.onclick = () => { window.location.href = 'patient-dashboard.html'; };
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - HealthNexus</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="env.js"></script>
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <section id="view-login" class="view-section">
+        <div class="login-container">
+            <div class="login-box premium-login-box">
+                <div class="login-switcher">
+                    <button class="switch-btn active" id="btnSwitchHospital"
+                        onclick="app.switchLogin('hospital')">Hospital</button>
+                    <button class="switch-btn" id="btnSwitchPatient"
+                        onclick="app.switchLogin('patient')">Patient</button>
+                </div>
+
+                <div class="auth-mode-switcher" id="authModeSwitcher">
+                    <button class="mode-btn active" id="btnModeLogin" onclick="app.switchAuthMode('login')">Sign In</button>
+                    <button class="mode-btn" id="btnModeSignup" onclick="app.switchAuthMode('signup')">Sign Up</button>
+                </div>
+
+                <!-- Hospital Login Form -->
+                <form id="formHospitalLogin" onsubmit="event.preventDefault(); app.login('hospital');"
+                    class="auth-form active">
+                    <h2><i class="fa-solid fa-hospital"></i> Hospital Portal</h2>
+                    <p>Access patient records and hospital management.</p>
+                    <div class="input-group">
+                        <label>Hospital ID / Email</label>
+                        <input type="email" id="hospEmail" placeholder="admin@hospital.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="hospPass" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-100">Login to Dashboard</button>
+                </form>
+
+                <!-- Hospital Signup Form -->
+                <form id="formHospitalSignup" onsubmit="event.preventDefault(); app.signUp('hospital');"
+                    class="auth-form hidden">
+                    <h2><i class="fa-solid fa-hospital-user"></i> Join HealthNexus</h2>
+                    <p>Register your hospital today.</p>
+                    <div class="input-group">
+                        <label>Hospital Name</label>
+                        <input type="text" id="regHospName" placeholder="City Hospital" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="regHospEmail" placeholder="admin@hospital.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="regHospPass" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-100">Register Hospital</button>
+                </form>
+
+                <!-- Patient Login Form -->
+                <form id="formPatientLogin" onsubmit="event.preventDefault(); app.login('patient');"
+                    class="auth-form hidden">
+                    <h2><i class="fa-solid fa-user"></i> Patient Portal</h2>
+                    <p>Track your health, appointments, and vitals.</p>
+                    <div class="input-group">
+                        <label>Patient ID / Email</label>
+                        <input type="email" id="patEmail" placeholder="patient@nexus.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="patPass" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-secondary w-100">Access My Health</button>
+                    
+                    <div class="auth-footer hidden">
+                        <p id="authToggleText">Don't have an account? <a href="#" onclick="event.preventDefault(); app.switchAuthMode('signup');">Sign Up</a></p>
+                    </div>
+                </form>
+
+                <!-- Patient Signup Form -->
+                <form id="formPatientSignup" onsubmit="event.preventDefault(); app.signUp('patient');"
+                    class="auth-form hidden">
+                    <h2><i class="fa-solid fa-user-plus"></i> Join HealthNexus</h2>
+                    <p>Create your secure health profile today.</p>
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" placeholder="John Doe" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="regEmail" placeholder="john@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="regPass" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-100">Create My Account</button>
+                    
+                    <div class="auth-footer hidden">
+                        <p>Already have an account? <a href="#" onclick="event.preventDefault(); app.switchAuthMode('login');">Login</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="components.js"></script>
+    <script type="module" src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            components.renderNavbar('login');
+            components.renderFooter();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Pretty URLs (optional — direct .html links also work)
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/patient-dashboard"
+  to = "/patient-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/hospital-dashboard"
+  to = "/hospital-dashboard.html"
+  status = 200

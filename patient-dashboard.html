@@ -1,0 +1,2869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Dashboard  HealthNexus</title>
+  <meta name="description" content="HealthNexus patient dashboard  monitor BP, Blood Sugar and Hemoglobin in real time." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /*  RESET  */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:         #0b0f1a;
+      --bg2:        #111827;
+      --glass:      rgba(255,255,255,0.04);
+      --border:     rgba(255,255,255,0.08);
+      --accent:     #6c63ff;
+      --accent2:    #00d4aa;
+      --danger:     #ff4d6d;
+      --warn:       #f59e0b;
+      --info:       #38bdf8;
+      --text:       #e2e8f0;
+      --muted:      #64748b;
+      --card-r:     16px;
+      --sidebar-w:  232px;
+      --ease:       0.25s cubic-bezier(.4,0,.2,1);
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /*  SIDEBAR  */
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: width 0.3s var(--ease);
+      overflow: hidden;
+    }
+    .sidebar.collapsed { width: 80px; }
+    .sb-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px 20px;
+    }
+    .sidebar.collapsed .sb-home-link > span:not(.logo-icon) {
+      display: none;
+    }
+    .sidebar.collapsed .sb-logo .sb-home-link .logo-icon {
+      display: flex;
+    }
+    .sidebar.collapsed .sb-logo {
+      padding: 0 8px 20px;
+      align-items: center;
+    }
+    .sidebar.collapsed .sb-toggle {
+      margin-left: 0;
+    }
+    .sb-logo .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(160deg, rgba(108,99,255,0.45) 0%, rgba(0,212,170,0.5) 60%, rgba(14,20,40,0.95) 100%);
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; flex-shrink: 0; color: #fff;
+      border: 1px solid rgba(108,99,255,0.35);
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.15) inset,
+        0 -3px 0 rgba(0,0,0,0.35) inset,
+        0 0 18px rgba(108,99,255,0.2);
+      transition: all var(--ease);
+    }
+    .sb-home-link:hover .logo-icon {
+      box-shadow:
+        0 8px 20px rgba(0,0,0,0.55),
+        0 1px 0 rgba(255,255,255,0.18) inset,
+        0 0 22px rgba(108,99,255,0.35);
+      transform: translateY(-2px);
+    }
+    .sb-logo-name {
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--muted);
+      transition: color var(--ease);
+    }
+    .sb-home-link:hover .sb-logo-name { color: var(--text); }
+    .sb-label {
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 1.3px; text-transform: uppercase;
+      color: var(--muted); padding: 0 20px 8px;
+    }
+    .sb-nav { list-style: none; }
+    .sb-nav li {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 20px; margin: 2px 8px;
+      border-radius: 10px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--muted);
+      transition: all var(--ease);
+      position: relative;
+    }
+    .sb-nav li:hover { background: var(--glass); color: var(--text); }
+    .sb-nav li.active {
+      background: linear-gradient(135deg, rgba(108,99,255,0.18), rgba(0,212,170,0.1));
+      color: #fff; font-weight: 600;
+    }
+    .sb-nav li.active::before {
+      content: ''; position: absolute; left: -8px; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 60%;
+      background: linear-gradient(var(--accent), var(--accent2));
+      border-radius: 99px;
+    }
+    .sb-nav li .ni {
+      width: 34px; height: 34px; min-width: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 9px; font-size: 0.9rem;
+      background: linear-gradient(160deg, rgba(108,99,255,0.18) 0%, rgba(14,20,40,0.9) 100%);
+      border: 1px solid rgba(108,99,255,0.18);
+      color: var(--muted);
+      box-shadow:
+        0 4px 8px rgba(0,0,0,0.4),
+        0 1px 0 rgba(255,255,255,0.07) inset,
+        0 -2px 0 rgba(0,0,0,0.3) inset;
+      transition: all var(--ease);
+    }
+    .sb-nav li:hover .ni,
+    .sb-nav li.active .ni {
+      background: linear-gradient(160deg, rgba(108,99,255,0.38) 0%, rgba(14,20,60,0.95) 100%);
+      border-color: rgba(108,99,255,0.4);
+      color: #fff;
+      box-shadow:
+        0 6px 14px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 0 12px rgba(108,99,255,0.25);
+      transform: translateY(-1px);
+    }
+    .sidebar.collapsed .sb-nav li span:not(.ni),
+    .sidebar.collapsed .sb-label,
+    .sidebar.collapsed .sb-user-name,
+    .sidebar.collapsed .sb-user-role { 
+      display: none; 
+    }
+    .sidebar.collapsed .sb-nav li { justify-content: center; padding: 10px 0; margin: 4px 12px; }
+    .sb-toggle {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted);
+      border-radius: 9px; transition: all var(--ease);
+      flex-shrink: 0; font-size: 0.85rem;
+      background: linear-gradient(160deg, rgba(108,99,255,0.15) 0%, rgba(14,20,40,0.9) 100%);
+      border: 1px solid rgba(108,99,255,0.18);
+      box-shadow:
+        0 4px 8px rgba(0,0,0,0.4),
+        0 1px 0 rgba(255,255,255,0.07) inset,
+        0 -2px 0 rgba(0,0,0,0.3) inset;
+    }
+    .sb-toggle:hover {
+      background: linear-gradient(160deg, rgba(108,99,255,0.32) 0%, rgba(14,20,60,0.95) 100%);
+      border-color: rgba(108,99,255,0.4);
+      color: var(--text);
+      box-shadow:
+        0 6px 14px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 0 12px rgba(108,99,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .sb-home-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
+      flex: 1;
+    }
+    .sb-home-link:hover { opacity: 0.9; }
+
+    .sb-sos-item {
+      margin: 10px 8px 4px;
+      border: 1px solid rgba(255,77,109,0.45) !important;
+      background: rgba(255,77,109,0.08) !important;
+      color: #ff7b93 !important;
+      font-weight: 700 !important;
+    }
+    .sb-sos-item:hover {
+      background: rgba(255,77,109,0.16) !important;
+      color: #fff !important;
+    }
+    .sb-sos-item .ni { color: var(--danger); }
+
+    .tb-sos {
+      width: 38px !important;
+      height: 38px;
+      padding: 0 !important;
+      border: 1px solid rgba(255,77,109,0.45) !important;
+      background: linear-gradient(160deg, rgba(255,77,109,0.25) 0%, rgba(60,10,20,0.9) 100%) !important;
+      color: #ff8a9b !important;
+      font-weight: 700;
+      font-size: 0.78rem;
+      font-family: inherit;
+      box-shadow:
+        0 4px 10px rgba(0,0,0,0.45),
+        0 1px 0 rgba(255,255,255,0.08) inset,
+        0 -2px 0 rgba(0,0,0,0.35) inset,
+        0 0 12px rgba(255,77,109,0.15) !important;
+    }
+    .tb-sos span { display: none; }
+    .tb-sos:hover {
+      background: linear-gradient(160deg, rgba(255,77,109,0.45) 0%, rgba(80,10,25,0.95) 100%) !important;
+      border-color: rgba(255,77,109,0.7) !important;
+      color: #fff !important;
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.5),
+        0 0 16px rgba(255,77,109,0.3) !important;
+      transform: translateY(-1px);
+    }
+    .tb-sos i { font-size: 1rem; }
+    .tb-av {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: linear-gradient(160deg, rgba(108,99,255,0.5) 0%, rgba(0,212,170,0.4) 50%, rgba(14,20,40,0.95) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.88rem; color: #fff;
+      cursor: pointer;
+      border: 1px solid rgba(108,99,255,0.4);
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.15) inset,
+        0 -3px 0 rgba(0,0,0,0.35) inset,
+        0 0 14px rgba(108,99,255,0.2);
+      transition: all var(--ease);
+    }
+    .tb-av:hover {
+      box-shadow:
+        0 8px 20px rgba(0,0,0,0.55),
+        0 1px 0 rgba(255,255,255,0.18) inset,
+        0 0 20px rgba(108,99,255,0.35);
+      transform: translateY(-2px);
+    }
+
+    .sb-divider { height: 1px; background: var(--border); margin: 12px 20px; }
+    .sb-footer { padding: 12px 8px 20px; margin-top: auto; }
+    .sb-logout-btn {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.85rem 1rem; border-radius: 10px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      transition: all var(--ease);
+    }
+    .sb-logout-btn:hover {
+      background: rgba(255,77,109,0.08);
+      color: #f87171;
+    }
+    .sb-logout-btn .ni {
+      background: linear-gradient(160deg, rgba(239,68,68,0.2) 0%, rgba(14,10,20,0.9) 100%);
+      border-color: rgba(239,68,68,0.2);
+      color: #f87171;
+    }
+    .sb-logout-btn:hover .ni {
+      background: linear-gradient(160deg, rgba(239,68,68,0.4) 0%, rgba(30,10,20,0.95) 100%);
+      box-shadow:
+        0 6px 14px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 0 12px rgba(239,68,68,0.25);
+      border-color: rgba(239,68,68,0.4);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .sidebar.collapsed .sb-logout-btn { justify-content: center; padding: 0.85rem 0; }
+    .sidebar.collapsed .sb-logout-btn span { display: none; }
+
+    /*  MAIN  */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /*  TOPBAR  */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11,15,26,0.9);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+    .topbar-left h1 { font-size: 1.15rem; font-weight: 700; }
+    .topbar-left p  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .topbar-right   { display: flex; align-items: center; gap: 12px; }
+    .tb-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1px solid rgba(108,99,255,0.2);
+      background: linear-gradient(160deg, rgba(108,99,255,0.15) 0%, rgba(14,20,40,0.9) 100%);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all var(--ease); font-size: 0.85rem; position: relative;
+      box-shadow:
+        0 4px 8px rgba(0,0,0,0.4),
+        0 1px 0 rgba(255,255,255,0.07) inset,
+        0 -2px 0 rgba(0,0,0,0.3) inset;
+    }
+    .tb-btn:hover {
+      background: linear-gradient(160deg, rgba(108,99,255,0.3) 0%, rgba(14,20,60,0.95) 100%);
+      border-color: rgba(108,99,255,0.4);
+      box-shadow:
+        0 6px 14px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 0 12px rgba(108,99,255,0.2);
+      transform: translateY(-1px);
+    }
+    .tb-badge {
+      position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--danger); font-size: 0.6rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--bg);
+    }
+
+    /*  SCROLL AREA  */
+    .dash-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 16px;
+      animation: view-in 0.4s ease-out;
+    }
+    @keyframes view-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /*  CARD  */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--card-r);
+      backdrop-filter: blur(16px);
+      transition: all var(--ease);
+    }
+    .card:hover {
+      border-color: rgba(255,255,255,0.13);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 0;
+    }
+    .card-title {
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--muted);
+    }
+    .score-today-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--accent2);
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.25);
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    /*  LAYOUT HELPERS  */
+    .row  { display: flex; gap: 16px; }
+    .col  { flex: 1; min-width: 0; }
+    .g3   { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+    /* Dashboard row 1: score card + stat cards */
+    .dash-row1 {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .dash-stats-col { display: flex; flex-direction: column; }
+    .dash-stats-col .g3 { flex: 1; }
+    @media (max-width: 960px) {
+      .dash-row1 { grid-template-columns: 1fr; }
+    }
+
+    /* ── VITAL CARDS ── */
+    .vitals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 860px) { .vitals-grid { grid-template-columns: 1fr; } }
+
+    .vital-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all var(--ease);
+    }
+    .vital-card:hover {
+      border-color: rgba(255,255,255,0.13);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
+    .vital-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 3D icon box for vital cards */
+    .vital-icon-3d {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      transition: all var(--ease);
+    }
+    .vi-red {
+      background: linear-gradient(160deg, rgba(255,77,109,0.45) 0%, rgba(60,10,20,0.92) 100%);
+      border: 1px solid rgba(255,77,109,0.35);
+      color: #ff8a9b;
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.12) inset,
+        0 -3px 0 rgba(0,0,0,0.35) inset,
+        0 0 16px rgba(255,77,109,0.18);
+    }
+    .vi-amber {
+      background: linear-gradient(160deg, rgba(245,158,11,0.45) 0%, rgba(50,30,5,0.92) 100%);
+      border: 1px solid rgba(245,158,11,0.35);
+      color: #fbbf24;
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.12) inset,
+        0 -3px 0 rgba(0,0,0,0.35) inset,
+        0 0 16px rgba(245,158,11,0.18);
+    }
+    .vi-teal {
+      background: linear-gradient(160deg, rgba(0,212,170,0.45) 0%, rgba(5,40,35,0.92) 100%);
+      border: 1px solid rgba(0,212,170,0.35);
+      color: #34d399;
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.12) inset,
+        0 -3px 0 rgba(0,0,0,0.35) inset,
+        0 0 16px rgba(0,212,170,0.18);
+    }
+    .vital-card:hover .vital-icon-3d { transform: translateY(-2px); }
+
+    .vital-label {
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--muted);
+    }
+    .vital-value {
+      font-size: 2.2rem; font-weight: 800;
+      color: #fff; line-height: 1;
+    }
+    .vital-unit { font-size: 1rem; font-weight: 500; color: var(--muted); }
+    .vital-unit-label { font-size: 0.72rem; color: var(--muted); margin-top: -4px; }
+    .vital-ref { font-size: 0.7rem; color: var(--muted); opacity: 0.7; line-height: 1.4; }
+    .vital-bar {
+      height: 5px; border-radius: 99px;
+      background: rgba(255,255,255,0.07); overflow: hidden; margin-top: 4px;
+    }
+    .vital-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+    /* ── MID ROW: score + graph ── */
+    .dash-mid-row {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 960px) { .dash-mid-row { grid-template-columns: 1fr; } }
+
+    /* 
+       A. HEALTH SCORE RING
+     */
+    .score-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 20px 24px;
+    }
+    .ring-container { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+    .ring-container svg { transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 13; }
+    .ring-fill {
+      fill: none; stroke-width: 13; stroke-linecap: round;
+      stroke-dasharray: 408;
+      stroke-dashoffset: 408;
+      stroke: url(#scoreGrad);
+      transition: stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1);
+    }
+    .ring-center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ring-num  { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; }
+    .ring-sub  { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    /* "Overall Health" label — small, tight */
+    .score-overall-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .risk-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 0.68rem; font-weight: 700;
+    }
+    .pill-low  { background: rgba(0,212,170,0.15); color:var(--accent2); border:1px solid rgba(0,212,170,0.3); }
+    .pill-mod  { background: rgba(245,158,11,0.15); color:var(--warn);   border:1px solid rgba(245,158,11,0.3); }
+    .pill-high { background: rgba(255,77,109,0.15); color:var(--danger); border:1px solid rgba(255,77,109,0.3); }
+
+    /* Score breakdown box */
+    .score-breakdown-box {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sb-row { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; }
+    .sb-label { width: 72px; color: var(--muted); flex-shrink: 0; white-space: nowrap; font-size: 0.6rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    .sb-bar-bg { flex: 1; height: 4px; border-radius: 99px; background: rgba(255,255,255,0.07); }
+    .sb-bar-fill { height: 100%; border-radius: 99px; transition: width 1.2s ease; }
+    .sb-score { width: 22px; text-align: right; font-weight: 700; font-size: 0.68rem; color: var(--text); flex-shrink: 0; }
+
+    /* 
+       B. STAT CARDS
+     */
+    .stat-card { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .stat-top  { display: flex; align-items: center; justify-content: space-between; }
+    .stat-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+    }
+    .ic-red   { background: rgba(255,77,109,0.15); color: var(--danger); }
+    .ic-amber { background: rgba(245,158,11,0.15); color: var(--warn);   }
+    .ic-teal  { background: rgba(0,212,170,0.15);  color: var(--accent2);}
+    .chip {
+      font-size: 0.65rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 99px;
+    }
+    .c-good { background: rgba(0,212,170,0.15); color: var(--accent2); }
+    .c-warn { background: rgba(245,158,11,0.15); color: var(--warn);   }
+    .c-high { background: rgba(255,77,109,0.15); color: var(--danger); }
+    .stat-val  { font-size: 1.9rem; font-weight: 800; line-height: 1; }
+    .stat-unit { font-size: 0.7rem; color: var(--muted); font-weight: 400; margin-left: 3px; }
+    .stat-name { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+    .stat-ref  { font-size: 0.67rem; color: var(--muted); opacity: 0.7; }
+    .mini-bar  { height: 4px; border-radius: 99px; background: rgba(255,255,255,0.07); overflow: hidden; }
+    .mini-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+    /* 
+       C. GRAPH
+     */
+    .graph-inner { padding: 12px 20px 20px; }
+    .gtab-row    { display: flex; gap: 8px; margin-bottom: 14px; }
+    .gtab {
+      padding: 5px 16px; border-radius: 99px;
+      font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border);
+      color: var(--muted); background: transparent;
+      transition: all var(--ease);
+    }
+    .gtab.active, .gtab:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    canvas#vitalChart { max-height: 210px; }
+
+    /* 
+       D. ALERTS
+     */
+    .alert-list { display: flex; flex-direction: column; gap: 10px; padding: 12px 20px 20px; }
+    .alert-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; border-radius: 10px;
+      font-size: 0.8rem; line-height: 1.5;
+    }
+    .a-crit { background: rgba(255,77,109,0.1);  border: 1px solid rgba(255,77,109,0.25); }
+    .a-warn { background: rgba(245,158,11,0.1);  border: 1px solid rgba(245,158,11,0.25); }
+    .a-info { background: rgba(56,189,248,0.1);  border: 1px solid rgba(56,189,248,0.25); }
+    .adot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 5px;
+    }
+    .d-crit { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: pdot 2s infinite; }
+    .d-warn { background: var(--warn);   box-shadow: 0 0 6px var(--warn); }
+    .d-info { background: var(--info);   box-shadow: 0 0 6px var(--info); }
+    @keyframes pdot {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.4; transform:scale(1.5); }
+    }
+    .alert-item strong { display: block; font-weight: 600; font-size: 0.82rem; }
+
+    /* 
+       D. AI INSIGHT
+     */
+    .insight-inner { padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .ai-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 99px;
+      font-size: 0.68rem; font-weight: 700;
+      background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,212,170,0.15));
+      color: var(--accent2); border: 1px solid rgba(0,212,170,0.25);
+      width: fit-content;
+    }
+    .insight-text { font-size: 0.845rem; line-height: 1.7; color: var(--text); }
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag {
+      font-size: 0.68rem; padding: 4px 10px;
+      border-radius: 99px;
+    }
+    .tag-v { background: rgba(108,99,255,0.15); color: var(--accent); }
+    .tag-g { background: rgba(0,212,170,0.12);  color: var(--accent2); }
+    .tag-b { background: rgba(56,189,248,0.12); color: var(--info); }
+
+    /* 
+       E. HEALTH STORY
+     */
+    .story-inner { padding: 12px 20px 22px; }
+    .story-text  { font-size: 0.88rem; line-height: 1.8; color: #a9b8cc; }
+    .story-text mark {
+      background: linear-gradient(135deg, rgba(108,99,255,0.25), rgba(0,212,170,0.18));
+      color: var(--text); padding: 1px 5px; border-radius: 4px;
+    }
+
+    /* 
+       F. QUICK ACTIONS
+     */
+    .qa-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 12px 20px 20px; }
+    .qa-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      padding: 18px 10px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--glass);
+      cursor: pointer; font-size: 0.75rem; font-weight: 600; color: var(--text);
+      transition: all var(--ease);
+    }
+    .qa-btn:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.18); }
+    .qa-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .qa-sos  { border-color: rgba(255,77,109,0.4); background: rgba(255,77,109,0.07); }
+    .qa-sos .qa-icon { background: rgba(255,77,109,0.2); color: var(--danger); animation: sos-glow 1.8s ease-in-out infinite; }
+    .qa-appt .qa-icon { background: rgba(108,99,255,0.2); color: var(--accent); }
+    .qa-med  .qa-icon { background: rgba(0,212,170,0.2);  color: var(--accent2); }
+    .qa-ai   .qa-icon { background: rgba(56,189,248,0.2); color: var(--info); }
+    @keyframes sos-glow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,77,109,0.5); }
+      50%      { box-shadow: 0 0 0 10px rgba(255,77,109,0); }
+    }
+
+    /*  MODAL  */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: opacity var(--ease);
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid rgba(255,77,109,0.35);
+      border-radius: 20px; padding: 36px 30px;
+      max-width: 420px; width: 90%; text-align: center;
+      transform: scale(0.9); transition: transform var(--ease);
+    }
+    .overlay.open .modal-box { transform: scale(1); }
+    .modal-ico { font-size: 2.8rem; color: var(--danger); margin-bottom: 16px; animation: sos-glow 1.8s ease-in-out infinite; }
+    .modal-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; }
+    .modal-sub   { font-size: 0.83rem; color: var(--muted); line-height: 1.65; margin-bottom: 24px; }
+    .modal-btns  { display: flex; gap: 12px; justify-content: center; }
+    .mbtn {
+      padding: 11px 26px; border-radius: 10px;
+      font-weight: 700; font-size: 0.875rem;
+      cursor: pointer; border: none; transition: all var(--ease);
+    }
+    .mbtn-confirm { background: var(--danger); color: #fff; }
+    .mbtn-confirm:hover { background: #e0384f; transform: scale(1.03); }
+    .mbtn-cancel  { background: var(--glass); color: var(--text); border: 1px solid var(--border); }
+    .mbtn-cancel:hover { background: rgba(255,255,255,0.09); }
+    .mbtn-save { background: var(--accent2); color: var(--bg); }
+    .mbtn-save:hover { filter: brightness(1.08); transform: scale(1.03); }
+    .modal-box.family-add-modal {
+      border-color: rgba(0,212,170,0.35);
+      text-align: left;
+      max-width: 420px;
+    }
+    .family-add-modal .modal-title { text-align: center; }
+    .family-add-field { margin-bottom: 18px; }
+    .family-add-field label {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .family-add-field input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .family-add-field input:focus { border-color: var(--accent2); }
+    .family-add-modal .modal-btns { flex-wrap: wrap; margin-top: 8px; }
+
+    .modal-box.blood-reg-modal {
+      border-color: rgba(255,77,109,0.35);
+      text-align: left;
+      max-width: 460px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .blood-reg-modal .modal-title { text-align: center; }
+    .blood-reg-modal .family-add-field select {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .blood-reg-modal .family-add-field select:focus { border-color: var(--danger); }
+    .blood-detail-list {
+      text-align: left;
+      margin: 0;
+      padding: 0 4px 8px;
+    }
+    .blood-detail-list dt {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    .blood-detail-list dt:first-child { margin-top: 0; }
+    .blood-detail-list dd {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .blood-confirm-ico {
+      font-size: 2.5rem;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .modal-box.blood-contact-modal {
+      border-color: rgba(255,77,109,0.28);
+      text-align: left;
+      max-width: 400px;
+    }
+    .blood-contact-modal .modal-title { text-align: center; margin-bottom: 16px; }
+
+    .blood-donor-search-results {
+      padding: 0 20px 18px;
+      margin-top: 4px;
+    }
+    .blood-donor-search-results-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .blood-donor-match-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      border-left: 3px solid var(--accent2);
+    }
+    .blood-donor-match-row:last-child { margin-bottom: 0; }
+    .blood-donor-match-name { font-weight: 700; color: #fff; font-size: 0.92rem; }
+    .blood-donor-match-contact { font-size: 0.82rem; color: var(--muted); }
+    .blood-donor-match-contact a { color: var(--accent2); text-decoration: none; }
+    .blood-donor-match-contact a:hover { text-decoration: underline; }
+    .blood-donor-search-empty { font-size: 0.82rem; color: var(--muted); padding: 8px 0; }
+
+    /*  TOAST  */
+    #toast {
+      position: fixed; bottom: 26px; right: 26px;
+      background: var(--bg2); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px;
+      border-radius: 12px; font-size: 0.82rem; font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.35s cubic-bezier(.4,0,.2,1);
+      z-index: 1000; backdrop-filter: blur(12px);
+    }
+
+    /* Nexus Toast (created dynamically by app.showToast) */
+    .nexus-toast {
+      position: fixed; bottom: 26px; right: 26px;
+      background: var(--bg2); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px;
+      border-radius: 12px; font-size: 0.82rem; font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.35s cubic-bezier(.4,0,.2,1);
+      z-index: 1000; backdrop-filter: blur(12px);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nexus-toast.visible {
+      transform: translateY(0); opacity: 1;
+    }
+    .nexus-toast.success { border-color: rgba(0,212,170,0.3); }
+    .nexus-toast.info { border-color: rgba(56,189,248,0.3); }
+    .nexus-toast.error { border-color: rgba(255,77,109,0.3); }
+
+    /*  RESPONSIVE  */
+    @media (max-width: 900px) {
+      .g3  { grid-template-columns: repeat(2,1fr); }
+      .row { flex-direction: column; }
+      .qa-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 640px) {
+      :root { --sidebar-w: 58px; }
+      .sb-logo span, .sb-nav li span:not(.ni),
+      .sb-user-name, .sb-user-role, .sb-label { display: none; }
+      .sb-nav li { justify-content: center; padding: 12px; }
+      .g3  { grid-template-columns: 1fr; }
+    }
+    /*  VIEW SWITCH  */
+    .dash-view { display: none; height: 100%; width: 100%; overflow: hidden; }
+    .dash-view.active-view { display: flex; flex-direction: column; }
+
+    /*  SHARED PAGE WRAPPER  */
+    .appt-page {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-bottom: 2rem;
+    }
+    .appt-page-title {
+      font-size: 1.1rem; font-weight: 700; color: #fff;
+      margin-bottom: 16px;
+    }
+    .appt-section-label {
+      font-size: 0.72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin: 18px 0 10px;
+    }
+    .appt-list { display: flex; flex-direction: column; gap: 8px; }
+    .appt-card {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 14px;
+      transition: all var(--ease);
+    }
+    .appt-card:hover {
+      border-color: rgba(108,99,255,0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+    .appt-left { display: flex; align-items: center; gap: 10px; }
+    .appt-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; flex-shrink: 0; color: #fff;
+    }
+    .appt-icon.in-person { background: #14b8a6; }
+    .appt-icon.virtual    { background: #0ea5e9; }
+    .appt-doc-name { font-weight: 700; font-size: 0.82rem; color: #fff; }
+    .appt-doc-spec { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+    .appt-hospital { font-size: 0.65rem; color: var(--muted); margin-top: 2px; opacity: 0.8; }
+    .appt-right { display: flex; align-items: center; gap: 12px; }
+    .appt-timing { text-align: right; }
+    .appt-date { font-weight: 700; font-size: 0.78rem; color: #f8fafc; }
+    .appt-time { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+    .appt-badge {
+      padding: 2px 8px; border-radius: 99px;
+      font-size: 0.6rem; font-weight: 700;
+      border: 1px solid transparent; white-space: nowrap;
+    }
+    .appt-badge.in-person { background: rgba(20,184,166,0.1); color: #2dd4bf; border-color: rgba(20,184,166,0.3); }
+    .appt-badge.virtual   { background: rgba(14,165,233,0.1); color: #38bdf8; border-color: rgba(14,165,233,0.3); }
+    .appt-book-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 6px;
+    }
+    .appt-book-lead {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+      margin: 0 0 12px;
+    }
+    .appt-book-controls {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .appt-type-toggle { display: flex; gap: 8px; flex: 1; min-width: 0; }
+    .appt-type-btn {
+      flex: 1; padding: 8px 12px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03); color: var(--muted);
+      font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      transition: all var(--ease); white-space: nowrap;
+    }
+    .appt-type-btn:hover { border-color: rgba(108,99,255,0.35); color: var(--text); }
+    .appt-type-btn.active[data-type="in-person"] {
+      background: rgba(20,184,166,0.12); border-color: rgba(20,184,166,0.45); color: #2dd4bf;
+    }
+    .appt-type-btn.active[data-type="virtual"] {
+      background: rgba(14,165,233,0.12); border-color: rgba(14,165,233,0.45); color: #38bdf8;
+    }
+    .appt-book-btn {
+      padding: 8px 16px; border-radius: 8px; font-size: 0.78rem;
+      font-weight: 700; background: var(--accent); color: #fff;
+      border: none; cursor: pointer; white-space: nowrap;
+      transition: all var(--ease); flex-shrink: 0;
+    }
+    .appt-book-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .appt-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 0.88rem; }
+    .appt-book-modal.modal-box {
+      border-color: rgba(108,99,255,0.35); max-width: 440px; text-align: left;
+    }
+    .appt-book-modal .modal-title { text-align: center; margin-bottom: 8px; }
+    .appt-book-modal .modal-sub { text-align: center; margin-bottom: 18px; }
+    .appt-book-modal .family-add-field select,
+    .appt-book-modal .family-add-field input[type="date"] {
+      width: 100%; box-sizing: border-box; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; color: var(--text); font-size: 0.95rem; outline: none; cursor: pointer;
+    }
+    .appt-book-modal .family-add-field select:focus,
+    .appt-book-modal .family-add-field input[type="date"]:focus { border-color: var(--accent); }
+    .appt-book-modal .family-add-field select:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    /* Blood Donation layout */
+    .blood-row { display: grid; grid-template-columns: 1fr 240px; gap: 16px; align-items: start; }
+    @media (max-width: 860px) { .blood-row { grid-template-columns: 1fr; } }
+
+    .blood-search-row {
+      display: flex; gap: 8px; padding: 12px 16px; align-items: center;
+    }
+    .blood-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; color: #fff;
+      font-size: 0.82rem; outline: none;
+    }
+    .blood-input:focus { border-color: var(--danger); }
+
+    .blood-register-card { display: flex; flex-direction: column; }
+    .blood-register-body {
+      padding: 16px; display: flex; flex-direction: column;
+      align-items: center; gap: 10px; text-align: center;
+    }
+    .blood-register-icon { font-size: 1.6rem; color: var(--danger); }
+    .blood-register-text { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+    .blood-register-btn {
+      width: 100%; padding: 8px 12px; border-radius: 8px;
+      background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.35);
+      color: #ff8a9b; font-size: 0.78rem; font-weight: 700;
+      cursor: pointer; transition: all var(--ease);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .blood-register-btn:hover {
+      background: rgba(255,77,109,0.22); color: #fff;
+      border-color: rgba(255,77,109,0.6);
+    }
+
+    /* Donor cards grid */
+    .donor-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+    }
+    @media (max-width: 900px) { .donor-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 560px) { .donor-grid { grid-template-columns: 1fr; } }
+
+    .donor-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: all var(--ease);
+    }
+    .donor-card:hover {
+      border-color: rgba(255,77,109,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .donor-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .donor-blood-badge {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 800;
+      background: linear-gradient(160deg, rgba(255,77,109,0.4) 0%, rgba(60,10,20,0.9) 100%);
+      border: 1px solid rgba(255,77,109,0.35); color: #ff8a9b;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.1) inset;
+    }
+    .donor-name { font-size: 0.82rem; font-weight: 700; color: #fff; }
+    .donor-meta { font-size: 0.68rem; color: var(--muted); }
+    .donor-contact-btn {
+      margin-top: auto; width: 100%; padding: 7px 10px;
+      border-radius: 7px; font-size: 0.72rem; font-weight: 700;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text); cursor: pointer; transition: all var(--ease);
+    }
+    .donor-contact-btn:hover {
+      background: rgba(255,77,109,0.12); border-color: rgba(255,77,109,0.35);
+      color: #ff8a9b;
+    }
+
+    /* Family Connect cards */
+    .fc-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px;
+    }
+    .family-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 860px) { .family-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 560px) { .family-grid { grid-template-columns: 1fr; } }
+
+    .family-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: all var(--ease);
+    }
+    .family-card:hover {
+      border-color: rgba(255,255,255,0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .fc-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+
+    /* 3D avatar icon */
+    .fc-av {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.1) inset;
+    }
+    .fc-av-teal {
+      background: linear-gradient(160deg, rgba(0,212,170,0.4) 0%, rgba(5,40,35,0.92) 100%);
+      border: 1px solid rgba(0,212,170,0.35); color: #34d399;
+    }
+    .fc-av-purple {
+      background: linear-gradient(160deg, rgba(108,99,255,0.4) 0%, rgba(14,10,40,0.92) 100%);
+      border: 1px solid rgba(108,99,255,0.35); color: #a78bfa;
+    }
+    .fc-av-amber {
+      background: linear-gradient(160deg, rgba(245,158,11,0.4) 0%, rgba(50,30,5,0.92) 100%);
+      border: 1px solid rgba(245,158,11,0.35); color: #fbbf24;
+    }
+
+    /* Access badge */
+    .fc-badge {
+      font-size: 0.62rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 99px; border: 1px solid transparent; white-space: nowrap;
+    }
+    .fc-badge-teal   { background: rgba(0,212,170,0.1);  color: var(--accent2); border-color: rgba(0,212,170,0.25); }
+    .fc-badge-purple { background: rgba(108,99,255,0.1); color: var(--accent);  border-color: rgba(108,99,255,0.25); }
+    .fc-badge-amber  { background: rgba(245,158,11,0.1); color: var(--warn);    border-color: rgba(245,158,11,0.25); }
+
+    .family-name  { font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .family-rel   { font-size: 0.7rem;  color: var(--muted); }
+    .family-phone { font-size: 0.7rem;  color: var(--muted); margin-top: 4px; }
+
+    /* Permissions card */
+    .fc-permissions-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .fc-permissions-title {
+      font-size: 0.78rem; font-weight: 700; color: #fff;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .fc-permissions-text {
+      font-size: 0.75rem; color: var(--muted); line-height: 1.6;
+    }
+
+    /* AI chat fills available height */
+    .ai-chat-card {
+      display: flex; flex-direction: column;
+      height: calc(100vh - 220px); min-height: 420px;
+      border-color: rgba(108,99,255,0.2);
+      overflow: hidden;
+    }
+    .ai-chat-window {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 16px;
+      background: rgba(0,0,0,0.1);
+    }
+    .ai-chat-input-row {
+      padding: 16px 20px; border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.2); display: flex; gap: 10px; align-items: center;
+    }
+
+    /* ── PROFILE PAGE ── */
+    .prof-header-card { margin-bottom: 0; }
+    .prof-header-inner {
+      display: flex; align-items: center; gap: 16px; padding: 16px 18px;
+    }
+    .prof-avatar {
+      width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+      background: linear-gradient(160deg, rgba(108,99,255,0.5) 0%, rgba(0,212,170,0.4) 50%, rgba(14,20,40,0.95) 100%);
+      border: 1px solid rgba(108,99,255,0.4);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.15) inset;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 800; color: #fff;
+    }
+    .prof-header-info { flex: 1; min-width: 0; }
+    .prof-name { font-size: 1rem; font-weight: 700; color: #fff; }
+    .prof-meta { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+    .prof-tags { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    .prof-tag {
+      font-size: 0.62rem; font-weight: 600; color: var(--muted);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .prof-edit-btn { flex-shrink: 0; }
+
+    /* Identity grid — 3 cols then 3 more */
+    .prof-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-bottom: 0;
+    }
+    @media (max-width: 760px) { .prof-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .prof-info-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: all var(--ease);
+    }
+    .prof-info-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-1px); }
+    .prof-info-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.1) inset;
+    }
+    .prof-info-label {
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--muted);
+    }
+    .prof-info-value { font-size: 0.82rem; font-weight: 700; color: #fff; }
+
+    /* Medical details grid */
+    .prof-medical-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+    @media (max-width: 760px) { .prof-medical-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .prof-medical-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .prof-medical-label {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .prof-medical-value { font-size: 0.8rem; font-weight: 600; color: #fff; line-height: 1.4; }
+  </style>
+  <script src="env.js"></script>
+</head>
+<body>
+
+<!--  SIDEBAR  -->
+<aside class="sidebar" id="patSidebar">
+  <div class="sb-logo">
+    <a href="index.html" class="sb-home-link" title="HealthNexus Home">
+      <div class="logo-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+      <span class="sb-logo-name">HealthNexus</span>
+    </a>
+    <div class="sb-toggle" onclick="toggleSidebar()" title="Menu">
+      <i class="fa-solid fa-bars"></i>
+    </div>
+  </div>
+  <ul class="sb-nav" id="sideNav">
+    <li class="active" onclick="switchPatView('dashboard', this)">
+      <span class="ni"><i class="fa-solid fa-house-medical"></i></span>
+      <span>Dashboard</span>
+    </li>
+    <li onclick="switchPatView('appointments', this)">
+      <span class="ni"><i class="fa-solid fa-calendar-check"></i></span>
+      <span>Appointments</span>
+    </li>
+    <li onclick="switchPatView('bloodDonation', this)">
+      <span class="ni"><i class="fa-solid fa-hand-holding-droplet"></i></span>
+      <span>Blood Donation</span>
+    </li>
+    <li onclick="switchPatView('familyConnect', this)">
+      <span class="ni"><i class="fa-solid fa-users-viewfinder"></i></span>
+      <span>Family Connect</span>
+    </li>
+    <li onclick="switchPatView('aiAssistant', this)">
+      <span class="ni"><i class="fa-solid fa-robot"></i></span>
+      <span>AI Assistant</span>
+    </li>
+  </ul>
+
+  <div class="sb-divider"></div>
+  <p class="sb-label">Account</p>
+  <ul class="sb-nav">
+    <li onclick="switchPatView('profile', this)">
+      <span class="ni"><i class="fa-solid fa-circle-user"></i></span>
+      <span>Profile</span>
+    </li>
+  </ul>
+
+  <ul class="sb-nav">
+  </ul>
+
+  <div class="sb-footer">
+    <div onclick="if(window.app && app.logout){app.logout();}else{window.location.href='index.html'}" class="sb-logout-btn" title="Logout">
+      <div class="ni"><i class="fa-solid fa-power-off"></i></div>
+      <span>Logout</span>
+    </div>
+  </div>
+</aside>
+
+<!--  MAIN  -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 id="patDashboardTitle">Patient Dashboard</h1>
+      <p id="patTopbarGreeting" style="font-size: 0.82rem; color: var(--muted); margin-top: 3px;">Hi, John</p>
+    </div>
+    <div class="topbar-right">
+      <button type="button" class="tb-btn tb-sos" title="SOS Emergency" onclick="openSOS()">
+        <i class="fa-solid fa-truck-medical"></i>
+        <span>SOS</span>
+      </button>
+      <div class="tb-av" id="patTopbarAvatar">JD</div>
+    </div>
+  </header>
+
+  <!--  VIEW: DASHBOARD  -->
+  <div class="dash-view active-view" id="viewDashboard">
+  <div class="dash-scroll">
+
+    <!-- VITALS ROW: 3 individual cards -->
+    <div class="vitals-grid">
+
+      <!-- Blood Pressure -->
+      <div class="vital-card">
+        <div class="vital-card-top">
+          <div class="vital-icon-3d vi-red">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <span class="chip c-good" id="bp-chip">Normal</span>
+        </div>
+        <div class="vital-label">Blood Pressure</div>
+        <div class="vital-value" id="bp-val">120<span class="vital-unit">/80</span></div>
+        <div class="vital-unit-label">mmHg</div>
+        <div class="vital-ref">Normal: 90–120 / 60–80 mmHg</div>
+        <div class="vital-bar">
+          <div class="vital-bar-fill" id="bp-mini" style="width:60%;background:linear-gradient(90deg,#6c63ff,#00d4aa)"></div>
+        </div>
+      </div>
+
+      <!-- Blood Sugar -->
+      <div class="vital-card">
+        <div class="vital-card-top">
+          <div class="vital-icon-3d vi-amber">
+            <i class="fa-solid fa-droplet"></i>
+          </div>
+          <span class="chip c-warn" id="sg-chip">Borderline</span>
+        </div>
+        <div class="vital-label">Blood Sugar</div>
+        <div class="vital-value" id="sg-val">108<span class="vital-unit"> mg/dL</span></div>
+        <div class="vital-unit-label">Fasting</div>
+        <div class="vital-ref">Normal fasting: 70–99 mg/dL</div>
+        <div class="vital-bar">
+          <div class="vital-bar-fill" id="sg-mini" style="width:70%;background:linear-gradient(90deg,#f59e0b,#f87171)"></div>
+        </div>
+      </div>
+
+      <!-- Hemoglobin -->
+      <div class="vital-card">
+        <div class="vital-card-top">
+          <div class="vital-icon-3d vi-teal">
+            <i class="fa-solid fa-flask-vial"></i>
+          </div>
+          <span class="chip c-good" id="hb-chip">Healthy</span>
+        </div>
+        <div class="vital-label">Hemoglobin</div>
+        <div class="vital-value" id="hb-val">13.8<span class="vital-unit"> g/dL</span></div>
+        <div class="vital-unit-label">Blood Count</div>
+        <div class="vital-ref">Normal male: 13.5–17.5 g/dL</div>
+        <div class="vital-bar">
+          <div class="vital-bar-fill" id="hb-mini" style="width:82%;background:linear-gradient(90deg,#00d4aa,#38bdf8)"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- HEALTH SCORE + GRAPH ROW -->
+    <div class="dash-mid-row">
+
+      <!-- Health Score Ring -->
+      <div class="card dash-score-card">
+        <div class="card-head">
+          <span class="card-title">
+            <i class="fa-solid fa-shield-heart" style="margin-right:6px;color:var(--accent2)"></i>
+            Health Risk Score
+          </span>
+          <span class="score-today-badge">Today</span>
+        </div>
+        <div class="score-wrap">
+          <div class="ring-container">
+            <svg viewBox="0 0 160 160" width="140" height="140">
+              <defs>
+                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#6c63ff"/>
+                  <stop offset="100%" stop-color="#00d4aa"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg"   cx="80" cy="80" r="65"/>
+              <circle class="ring-fill" id="ringFill" cx="80" cy="80" r="65"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-num" id="scoreNum">0</div>
+              <div class="ring-sub">/ 100</div>
+            </div>
+          </div>
+          <div class="score-meta" style="width:100%; text-align:center;">
+            <div class="score-overall-label">Overall Health</div>
+            <div style="display:flex; justify-content:center; margin-bottom:14px;">
+              <div class="risk-pill pill-low" id="riskPill">
+                <i class="fa-solid fa-circle-check"></i>
+                <span id="riskLabel">Low Risk</span>
+              </div>
+            </div>
+            <div class="score-breakdown-box">
+              <div class="sb-row">
+                <span class="sb-label">BP</span>
+                <div class="sb-bar-bg"><div class="sb-bar-fill" id="bp-bar" style="width:0%;background:linear-gradient(90deg,#6c63ff,#00d4aa)"></div></div>
+                <span class="sb-score" id="bp-sc"></span>
+              </div>
+              <div class="sb-row">
+                <span class="sb-label">Sugar</span>
+                <div class="sb-bar-bg"><div class="sb-bar-fill" id="sg-bar" style="width:0%;background:linear-gradient(90deg,#f59e0b,#f87171)"></div></div>
+                <span class="sb-score" id="sg-sc"></span>
+              </div>
+              <div class="sb-row">
+                <span class="sb-label">Hemo</span>
+                <div class="sb-bar-bg"><div class="sb-bar-fill" id="hb-bar" style="width:0%;background:linear-gradient(90deg,#00d4aa,#38bdf8)"></div></div>
+                <span class="sb-score" id="hb-sc"></span>
+              </div>
+            </div><!-- /score-breakdown-box -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Vital Trends Graph -->
+      <div class="card dash-graph-card">
+        <div class="card-head" style="flex-wrap:wrap; gap:10px;">
+          <span class="card-title">
+            <i class="fa-solid fa-chart-line" style="margin-right:6px;color:var(--accent)"></i>
+            Vital Trends — Last 7 Days
+          </span>
+          <div class="gtab-row" style="margin-bottom:0;">
+            <button class="gtab active" onclick="switchChart('bp',this)">BP</button>
+            <button class="gtab" onclick="switchChart('sugar',this)">Sugar</button>
+            <button class="gtab" onclick="switchChart('hemo',this)">Hemoglobin</button>
+          </div>
+        </div>
+        <div class="graph-inner">
+          <canvas id="vitalChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!--  ALERTS + AI INSIGHT  -->
+    <div class="row">
+      <div class="card col">
+        <div class="card-head">
+          <span class="card-title"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;color:var(--warn)"></i>Health Alerts</span>
+          <span style="font-size:0.72rem;color:var(--muted);">2 active</span>
+        </div>
+        <div class="alert-list">
+          <div class="alert-item a-warn">
+            <div class="adot d-warn"></div>
+            <div><strong>Borderline Blood Sugar — 108 mg/dL</strong> Fasting glucose slightly above normal. Reduce refined sugar intake.</div>
+          </div>
+          <div class="alert-item a-info">
+            <div class="adot d-info"></div>
+            <div><strong>BP Stable — 120/80 mmHg</strong> Within normal limits. Continue low-sodium diet.</div>
+          </div>
+          <div class="alert-item a-info">
+            <div class="adot d-info"></div>
+            <div><strong>Hemoglobin in Range — 13.8 g/dL</strong> No signs of anaemia. Maintain iron-rich diet.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card col">
+        <div class="card-head">
+          <span class="card-title"><i class="fa-solid fa-robot" style="margin-right:6px;color:var(--accent)"></i>AI Insight</span>
+          <div class="ai-chip"><i class="fa-solid fa-wand-magic-sparkles"></i> Nexus AI</div>
+        </div>
+        <div class="insight-inner">
+          <p class="insight-text">
+            Your overall health score is <strong style="color:var(--accent2)">78/100 (Low Risk)</strong>.
+            BP is well-controlled at 120/80 mmHg. Blood sugar at 108 mg/dL is borderline — your primary focus area.
+            Hemoglobin at 13.8 g/dL is healthy.<br><br>
+            <strong style="color:var(--accent2)">Recommendation:</strong> Limit sugar-rich foods, increase hydration, and follow up with your endocrinologist.
+          </p>
+          <div class="tag-row">
+            <span class="tag tag-v">Monitor sugar daily</span>
+            <span class="tag tag-g">BP well-controlled</span>
+            <span class="tag tag-b">Hemoglobin healthy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--  HEALTH STORY  -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><i class="fa-solid fa-book-medical" style="margin-right:6px;color:var(--accent2)"></i>Your Health Story</span>
+        <span style="font-size:0.72rem;color:var(--muted);">AI-generated — Updated today</span>
+      </div>
+      <div class="story-inner">
+        <p class="story-text">
+          Over the past 30 days, John's health profile has been evaluated across three key clinical markers.
+          His <mark>blood pressure remains stable at 120/80 mmHg</mark>, indicating normal cardiovascular function.
+          His <mark>fasting blood sugar of 108 mg/dL places him in the borderline pre-diabetic category</mark> — requiring dietary adjustment.
+          His <mark>hemoglobin level of 13.8 g/dL is within the normal male reference range</mark>, confirming no anaemia.
+          The combined health risk score of <mark>78/100 reflects a Low-Risk profile</mark>, but proactive blood sugar management is advised.
+        </p>
+      </div>
+    </div>
+
+    <!--  QUICK ACTIONS  -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><i class="fa-solid fa-bolt" style="margin-right:6px;color:var(--warn)"></i>Quick Actions</span>
+      </div>
+      <div class="qa-grid">
+        <div class="qa-btn qa-sos" id="sosBtn" onclick="openSOS()">
+          <div class="qa-icon"><i class="fa-solid fa-truck-medical"></i></div>
+          <span>SOS Emergency</span>
+        </div>
+        <div class="qa-btn qa-appt" onclick="switchPatView('appointments')">
+          <div class="qa-icon"><i class="fa-solid fa-calendar-plus"></i></div>
+          <span>Book Appointment</span>
+        </div>
+        <div class="qa-btn qa-med" id="medsBtn" onclick="if(window.app&&app.showToast){app.showToast('Opening Medicines...','info')}">
+          <div class="qa-icon"><i class="fa-solid fa-pills"></i></div>
+          <span>My Medicines</span>
+        </div>
+        <div class="qa-btn qa-ai" onclick="switchPatView('aiAssistant')">
+          <div class="qa-icon"><i class="fa-solid fa-robot"></i></div>
+          <span>Ask AI Doctor</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dash-scroll -->
+  </div><!-- /viewDashboard -->
+
+  <!--  VIEW: APPOINTMENTS  -->
+  <div class="dash-view" id="viewAppointments">
+    <div class="dash-scroll">
+    <div class="appt-page">
+      <div class="appt-page-title">Appointments</div>
+
+      <div class="appt-section-label" style="margin-top:0;">Book an appointment</div>
+      <div class="appt-book-card">
+        <p class="appt-book-lead">Choose <strong style="color:#2dd4bf;">In-Person</strong> for a clinic visit or <strong style="color:#38bdf8;">Virtual</strong> for a video consultation.</p>
+        <div class="appt-book-controls">
+          <div class="appt-type-toggle" id="apptBookTypeToggle" role="group" aria-label="Visit type">
+            <button type="button" class="appt-type-btn active" data-type="in-person" aria-pressed="true">
+              <i class="fa-solid fa-hospital-user"></i> In-Person
+            </button>
+            <button type="button" class="appt-type-btn" data-type="virtual" aria-pressed="false">
+              <i class="fa-solid fa-video"></i> Virtual
+            </button>
+          </div>
+          <button type="button" class="appt-book-btn" onclick="openAppointmentBookModal()">
+            <i class="fa-solid fa-calendar-plus"></i> Book
+          </button>
+        </div>
+      </div>
+
+      <div class="appt-section-label">Upcoming Appointments</div>
+      <div class="appt-list" id="upcomingAppointmentsList">
+
+        <!-- Dr. Ananya Gupta -->
+        <div class="appt-card">
+          <div class="appt-left">
+            <div class="appt-icon in-person"><i class="fa-solid fa-calendar-days"></i></div>
+            <div class="appt-info">
+              <div class="appt-doc-name">Dr. Ananya Gupta</div>
+              <div class="appt-doc-spec">Endocrinologist</div>
+            </div>
+          </div>
+          <div class="appt-right">
+            <div class="appt-timing">
+              <div class="appt-date">Apr 10, 2026</div>
+              <div class="appt-time">10:00 AM</div>
+            </div>
+            <div class="appt-badge in-person">In-Person</div>
+          </div>
+        </div>
+
+        <!-- Dr. Vikash Mehta -->
+        <div class="appt-card">
+          <div class="appt-left">
+            <div class="appt-icon virtual"><i class="fa-solid fa-video"></i></div>
+            <div class="appt-info">
+              <div class="appt-doc-name">Dr. Vikash Mehta</div>
+              <div class="appt-doc-spec">Cardiologist</div>
+            </div>
+          </div>
+          <div class="appt-right">
+            <div class="appt-timing">
+              <div class="appt-date">Apr 15, 2026</div>
+              <div class="appt-time">2:30 PM</div>
+            </div>
+            <div class="appt-badge virtual">Virtual</div>
+          </div>
+        </div>
+
+        <!-- Dr. Sunita Rao -->
+        <div class="appt-card">
+          <div class="appt-left">
+            <div class="appt-icon in-person"><i class="fa-solid fa-calendar-days"></i></div>
+            <div class="appt-info">
+              <div class="appt-doc-name">Dr. Sunita Rao</div>
+              <div class="appt-doc-spec">General Physician</div>
+            </div>
+          </div>
+          <div class="appt-right">
+            <div class="appt-timing">
+              <div class="appt-date">Apr 22, 2026</div>
+              <div class="appt-time">11:00 AM</div>
+            </div>
+            <div class="appt-badge in-person">In-Person</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="appt-section-label">Past Appointments</div>
+      <div class="appt-list" style="opacity:0.6;">
+        <!-- Example Past -->
+        <div class="appt-card">
+          <div class="appt-left">
+            <div class="appt-icon virtual"><i class="fa-solid fa-video"></i></div>
+            <div class="appt-info">
+              <div class="appt-doc-name">Dr. Ravi Kumar</div>
+              <div class="appt-doc-spec">Dermatologist</div>
+            </div>
+          </div>
+          <div class="appt-right">
+            <div class="appt-timing">
+              <div class="appt-date">Mar 28, 2026</div>
+              <div class="appt-time">3:00 PM</div>
+            </div>
+            <div class="appt-badge virtual" style="opacity:0.7;">Completed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div><!-- /viewAppointments -->
+
+  <!--  VIEW: BLOOD DONATION  -->
+  <div class="dash-view" id="viewBloodDonation">
+    <div class="dash-scroll">
+    <div class="appt-page">
+      <div class="appt-page-title">Blood Donation Center</div>
+
+      <div class="blood-row">
+        <!-- 1. Donor Search -->
+        <div class="card">
+          <div class="card-head"><span class="card-title">Find Nearby Donors</span></div>
+          <div class="blood-search-row">
+            <input type="text" id="bloodDonorGroupInput" placeholder="Enter Blood Group (e.g., O+)" class="blood-input" autocomplete="off">
+            <button type="button" class="appt-book-btn" id="bloodDonorSearchBtn" onclick="searchNearbyDonors()">
+              <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+          </div>
+          <div id="bloodDonorSearchHint" style="padding:0 16px 14px;">
+            <div class="alert-item a-info" style="font-size:0.78rem;">
+              <div class="adot d-info"></div>
+              <span id="bloodDonorHintText">Enter a blood group and tap <strong>Search</strong> to see matching donors within ~2 km.</span>
+            </div>
+          </div>
+          <div class="blood-donor-search-results" id="bloodDonorSearchResults" style="display:none;" aria-live="polite"></div>
+        </div>
+
+        <!-- 2. Register -->
+        <div class="card blood-register-card">
+          <div class="card-head"><span class="card-title">Become a Lifesaver</span></div>
+          <div class="blood-register-body">
+            <i class="fa-solid fa-hand-holding-heart blood-register-icon"></i>
+            <p class="blood-register-text">Your single donation can save up to three lives. Join our network today.</p>
+            <button type="button" class="blood-register-btn" id="bloodDonorRegisterBtn" onclick="openBloodDonorRegistration()">
+              <i class="fa-solid fa-heart-circle-plus"></i> Register
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="appt-section-label">Top Donors This Month</div>
+      <div class="donor-grid" id="bloodDonorsGrid">
+        <div class="donor-card" data-donor-blood="O+" data-donor-name="Rajesh Kumar" data-donor-age="34" data-donor-gender="Male" data-donor-contact="+91 98765 43210">
+          <div class="donor-card-top">
+            <div class="donor-blood-badge">O+</div>
+            <span class="chip c-good">Available</span>
+          </div>
+          <div class="donor-name">Rajesh Kumar</div>
+          <div class="donor-meta">Male · 34 yrs</div>
+          <button type="button" class="donor-contact-btn" onclick="openBloodDonorContactModal(this)">Contact Donor</button>
+        </div>
+        <div class="donor-card" data-donor-blood="AB-" data-donor-name="Sita Ramaswamy" data-donor-age="29" data-donor-gender="Female" data-donor-contact="+91 98765 43211">
+          <div class="donor-card-top">
+            <div class="donor-blood-badge" style="background:linear-gradient(160deg,rgba(245,158,11,0.4) 0%,rgba(50,30,5,0.9) 100%);border-color:rgba(245,158,11,0.35);color:#fbbf24;">AB-</div>
+            <span class="chip c-warn">Recent</span>
+          </div>
+          <div class="donor-name">Sita Ramaswamy</div>
+          <div class="donor-meta">Female · 29 yrs</div>
+          <button type="button" class="donor-contact-btn" onclick="openBloodDonorContactModal(this)">Contact Donor</button>
+        </div>
+        <div class="donor-card" data-donor-blood="A+" data-donor-name="Vikram Mehta" data-donor-age="41" data-donor-gender="Male" data-donor-contact="+91 98765 43212">
+          <div class="donor-card-top">
+            <div class="donor-blood-badge" style="background:linear-gradient(160deg,rgba(108,99,255,0.4) 0%,rgba(14,10,40,0.9) 100%);border-color:rgba(108,99,255,0.35);color:#a78bfa;">A+</div>
+            <span class="chip c-good">Available</span>
+          </div>
+          <div class="donor-name">Vikram Mehta</div>
+          <div class="donor-meta">Male · 41 yrs</div>
+          <button type="button" class="donor-contact-btn" onclick="openBloodDonorContactModal(this)">Contact Donor</button>
+        </div>
+        <div class="donor-card" data-donor-blood="B+" data-donor-name="Ananya Iyer" data-donor-age="26" data-donor-gender="Female" data-donor-contact="+91 98765 43213">
+          <div class="donor-card-top">
+            <div class="donor-blood-badge" style="background:linear-gradient(160deg,rgba(0,212,170,0.4) 0%,rgba(5,40,35,0.9) 100%);border-color:rgba(0,212,170,0.35);color:#34d399;">B+</div>
+            <span class="chip c-good">Available</span>
+          </div>
+          <div class="donor-name">Ananya Iyer</div>
+          <div class="donor-meta">Female · 26 yrs</div>
+          <button type="button" class="donor-contact-btn" onclick="openBloodDonorContactModal(this)">Contact Donor</button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div><!-- /viewBloodDonation -->
+
+  <!-- ═══ VIEW: FAMILY CONNECT ═══ -->
+  <div class="dash-view" id="viewFamilyConnect">
+    <div class="dash-scroll">
+      <div class="appt-page">
+
+        <div class="fc-header">
+          <div class="appt-page-title" style="margin-bottom:0;">Family Connect</div>
+          <button class="appt-book-btn" onclick="app.addFamilyMember()">
+            <i class="fa-solid fa-plus"></i> Add Member
+          </button>
+        </div>
+
+        <div class="family-grid" id="familyMembersGrid">
+          <!-- Wife -->
+          <div class="family-card">
+            <div class="fc-card-top">
+              <div class="fc-av fc-av-teal"><i class="fa-solid fa-user"></i></div>
+              <span class="fc-badge fc-badge-teal">Full Access</span>
+            </div>
+            <div class="family-name">Sunita Sharma</div>
+            <div class="family-rel">Wife</div>
+            <div class="family-phone">+91 98765 43210</div>
+          </div>
+
+          <!-- Son -->
+          <div class="family-card">
+            <div class="fc-card-top">
+              <div class="fc-av fc-av-purple"><i class="fa-solid fa-user-graduate"></i></div>
+              <span class="fc-badge fc-badge-purple">View Reports</span>
+            </div>
+            <div class="family-name">Arjun Sharma</div>
+            <div class="family-rel">Son</div>
+            <div class="family-phone">+91 98765 43211</div>
+          </div>
+
+          <!-- Brother -->
+          <div class="family-card">
+            <div class="fc-card-top">
+              <div class="fc-av fc-av-amber"><i class="fa-solid fa-user-doctor"></i></div>
+              <span class="fc-badge fc-badge-amber">Emergency Only</span>
+            </div>
+            <div class="family-name">Dr. R.K. Sharma</div>
+            <div class="family-rel">Brother</div>
+            <div class="family-phone">+91 98765 43212</div>
+          </div>
+        </div>
+
+        <div class="fc-permissions-card">
+          <div class="fc-permissions-title">
+            <i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i>
+            Access Permissions
+          </div>
+          <p class="fc-permissions-text">
+            Family members can monitor your health records, receive emergency alerts, and view appointment schedules based on the access level you grant them. You can update these permissions at any time.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /viewFamilyConnect -->
+
+  <!-- ═══ VIEW: AI ASSISTANT ═══ -->
+  <div class="dash-view" id="viewAiAssistant">
+    <div class="dash-scroll">
+    <div class="appt-page">
+      <div class="appt-page-title">Nexus AI Medical Guide</div>
+      <div class="card ai-chat-card">
+        <div class="ai-chat-window" id="aiChatWindow">
+          <div style="display:flex; gap:12px; align-self:flex-start; max-width:85%;">
+            <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg, var(--accent), var(--accent2)); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.8rem; color:#fff;">
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div style="background:rgba(255,255,255,0.06); padding:12px 16px; border-radius:0 14px 14px 14px; font-size:0.88rem; line-height:1.6; border:1px solid var(--border);">
+              Hello John! I'm your Nexus Health Assistant. I've analyzed your recent vitals. How can I help you today?
+            </div>
+          </div>
+        </div>
+        <div class="ai-chat-input-row">
+          <input type="text" id="aiChatInput" placeholder="Ask Nexus AI..." style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 16px; color:#fff; outline:none; font-size:0.88rem;" onkeypress="if(event.key === 'Enter') app.handleAiChat()">
+          <button class="tb-btn" id="aiSendBtn" style="background:var(--accent); border:none; color:#fff; width:42px; height:42px; border-radius:10px; flex-shrink:0;" onclick="app.handleAiChat()">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div><!-- /viewAiAssistant -->
+
+  <!-- ═══ VIEW: PROFILE ═══ -->
+  <div class="dash-view" id="viewProfile">
+    <div class="dash-scroll">
+    <div class="appt-page">
+      <div class="appt-page-title">Patient Profile</div>
+
+      <!-- Header card -->
+      <div class="card prof-header-card">
+        <div class="prof-header-inner">
+          <div class="prof-avatar" id="profileAvatarLarge">JD</div>
+          <div class="prof-header-info">
+            <div class="prof-name" id="profileName">Johnathan Doe</div>
+            <div class="prof-meta">Registered since Jan 2026 &bull; Patient ID: <span style="color:var(--accent);">NEX-8241</span></div>
+            <div class="prof-tags">
+              <span class="prof-tag"><i class="fa-solid fa-circle-check" style="color:var(--accent2);"></i> Active Patient</span>
+              <span class="prof-tag"><i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i> Verified</span>
+            </div>
+          </div>
+          <button class="appt-book-btn prof-edit-btn">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Identity grid -->
+      <div class="appt-section-label">Identity & Health Overview</div>
+      <div class="prof-grid">
+        <div class="prof-info-card">
+          <div class="prof-info-icon" style="background:linear-gradient(160deg,rgba(108,99,255,0.4) 0%,rgba(14,10,40,0.92) 100%);border-color:rgba(108,99,255,0.35);color:#a78bfa;">
+            <i class="fa-solid fa-venus-mars"></i>
+          </div>
+          <div class="prof-info-label">Gender / Age</div>
+          <div class="prof-info-value" id="profileGenderAge">Male, 28 Yrs</div>
+        </div>
+        <div class="prof-info-card">
+          <div class="prof-info-icon" style="background:linear-gradient(160deg,rgba(255,77,109,0.4) 0%,rgba(60,10,20,0.92) 100%);border-color:rgba(255,77,109,0.35);color:#ff8a9b;">
+            <i class="fa-solid fa-droplet"></i>
+          </div>
+          <div class="prof-info-label">Blood Group</div>
+          <div class="prof-info-value" id="profileBloodGroup" style="color:#ff8a9b;">O Positive (O+)</div>
+        </div>
+        <div class="prof-info-card">
+          <div class="prof-info-icon" style="background:linear-gradient(160deg,rgba(0,212,170,0.4) 0%,rgba(5,40,35,0.92) 100%);border-color:rgba(0,212,170,0.35);color:#34d399;">
+            <i class="fa-solid fa-weight-scale"></i>
+          </div>
+          <div class="prof-info-label">Weight / Height</div>
+          <div class="prof-info-value" id="profileWeightHeight">74 kg / 182 cm</div>
+        </div>
+        <div class="prof-info-card">
+          <div class="prof-info-icon" style="background:linear-gradient(160deg,rgba(56,189,248,0.4) 0%,rgba(5,20,40,0.92) 100%);border-color:rgba(56,189,248,0.35);color:#38bdf8;">
+            <i class="fa-solid fa-phone"></i>
+          </div>
+          <div class="prof-info-label">Contact</div>
+          <div class="prof-info-value">+91 98765 43210</div>
+        </div>
+        <div class="prof-info-card">
+          <div class="prof-info-icon" style="background:linear-gradient(160deg,rgba(245,158,11,0.4) 0%,rgba(50,30,5,0.92) 100%);border-color:rgba(245,158,11,0.35);color:#fbbf24;">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+          <div class="prof-info-label">Email</div>
+          <div class="prof-info-value" style="font-size:0.78rem;">john.doe@email.com</div>
+        </div>
+        <div class="prof-info-card">
+          <div class="prof-info-icon" style="background:linear-gradient(160deg,rgba(168,85,247,0.4) 0%,rgba(30,5,50,0.92) 100%);border-color:rgba(168,85,247,0.35);color:#c084fc;">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <div class="prof-info-label">Address</div>
+          <div class="prof-info-value" style="font-size:0.78rem;">123 Skyline St, Mumbai</div>
+        </div>
+      </div>
+
+      <!-- Medical details -->
+      <div class="appt-section-label">Medical Details</div>
+      <div class="prof-medical-grid">
+        <div class="prof-medical-card">
+          <div class="prof-medical-label"><i class="fa-solid fa-notes-medical" style="color:var(--warn);"></i> Current Condition</div>
+          <div class="prof-medical-value">Diabetes Type 2, Hypertension</div>
+        </div>
+        <div class="prof-medical-card">
+          <div class="prof-medical-label"><i class="fa-solid fa-pills" style="color:var(--accent2);"></i> Current Medications</div>
+          <div class="prof-medical-value">Metformin 500mg, Amlodipine 5mg</div>
+        </div>
+        <div class="prof-medical-card">
+          <div class="prof-medical-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Allergies</div>
+          <div class="prof-medical-value">Penicillin, Sulfa drugs</div>
+        </div>
+        <div class="prof-medical-card">
+          <div class="prof-medical-label"><i class="fa-solid fa-calendar-check" style="color:var(--accent);"></i> Last Visit</div>
+          <div class="prof-medical-value">Apr 10, 2026 — Dr. Ananya Gupta</div>
+        </div>
+        <div class="prof-medical-card">
+          <div class="prof-medical-label"><i class="fa-solid fa-calendar-plus" style="color:var(--accent2);"></i> Next Appointment</div>
+          <div class="prof-medical-value">Apr 22, 2026 — Dr. Sunita Rao</div>
+        </div>
+        <div class="prof-medical-card">
+          <div class="prof-medical-label"><i class="fa-solid fa-user-doctor" style="color:var(--accent);"></i> Primary Doctor</div>
+          <div class="prof-medical-value">Dr. Ananya Gupta — Endocrinologist</div>
+        </div>
+      </div>
+
+    </div>
+    </div>
+  </div><!-- /viewProfile -->
+
+
+</div><!-- /main -->
+
+<!--  SOS MODAL  -->
+<div class="overlay" id="sosModal">
+  <div class="modal-box">
+    <div class="modal-ico"><i class="fa-solid fa-truck-medical"></i></div>
+    <div class="modal-title">Confirm SOS Emergency</div>
+    <div class="modal-sub">
+      This will immediately alert emergency services and your registered contacts.
+      Your location will be shared. Confirm only in a real emergency.
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-confirm" onclick="confirmSOS()">
+        <i class="fa-solid fa-phone"></i> Call Emergency
+      </button>
+      <button class="mbtn mbtn-cancel" onclick="closeSOS()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!--  ADD FAMILY MEMBER MODAL  -->
+<div class="overlay" id="familyAddModal">
+  <div class="modal-box family-add-modal" onclick="event.stopPropagation()">
+    <div class="modal-title" style="margin-bottom:20px;">Add family member</div>
+    <form id="familyAddForm" onsubmit="event.preventDefault(); app.saveFamilyMember();">
+      <div class="family-add-field">
+        <label for="familyAddName">Name</label>
+        <input type="text" id="familyAddName" name="name" autocomplete="name" placeholder="Full name" maxlength="120">
+      </div>
+      <div class="family-add-field">
+        <label for="familyAddMobile">Mobile no.</label>
+        <input type="tel" id="familyAddMobile" name="mobile" autocomplete="tel" placeholder="+91 98765 43210" maxlength="20">
+      </div>
+      <div class="modal-btns" style="justify-content: stretch;">
+        <button type="submit" class="mbtn mbtn-save" style="flex:1;">Save</button>
+        <button type="button" class="mbtn mbtn-cancel" style="flex:1;" onclick="app.closeFamilyAddModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!--  BLOOD DONOR REGISTRATION MODAL  -->
+<div class="overlay" id="bloodDonorRegisterModal">
+  <div class="modal-box blood-reg-modal" onclick="event.stopPropagation()">
+    <div id="bloodRegFormStep">
+      <div class="modal-title" style="margin-bottom:18px;">Register as a donor</div>
+      <p class="modal-sub" style="text-align:center; margin-bottom:20px;">Enter your details to join the network. Hospital coordinators may contact you for drives.</p>
+      <form id="bloodDonorRegForm" onsubmit="submitBloodDonorRegistration(event)">
+        <div class="family-add-field">
+          <label for="bloodRegName">Full name</label>
+          <input type="text" id="bloodRegName" name="name" autocomplete="name" placeholder="Your name" maxlength="120" required>
+        </div>
+        <div class="family-add-field">
+          <label for="bloodRegAge">Age</label>
+          <input type="number" id="bloodRegAge" name="age" min="18" max="70" placeholder="e.g. 28" required>
+        </div>
+        <div class="family-add-field">
+          <label for="bloodRegGender">Gender</label>
+          <select id="bloodRegGender" name="gender" required>
+            <option value="">Select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="family-add-field">
+          <label for="bloodRegLocation">Location</label>
+          <input type="text" id="bloodRegLocation" name="location" autocomplete="address-level2" placeholder="City / area" maxlength="120" required>
+        </div>
+        <div class="family-add-field">
+          <label for="bloodRegBloodGroup">Blood group</label>
+          <input type="text" id="bloodRegBloodGroup" name="bloodGroup" placeholder="e.g. O+, A-" maxlength="8" required>
+        </div>
+        <div class="family-add-field">
+          <label for="bloodRegContact">Contact details</label>
+          <input type="tel" id="bloodRegContact" name="contact" autocomplete="tel" placeholder="+91 98765 43210" maxlength="20" required>
+        </div>
+        <div class="modal-btns" style="justify-content: stretch; flex-wrap: wrap; margin-top: 8px;">
+          <button type="submit" class="mbtn mbtn-confirm" style="flex:1;">Submit registration</button>
+          <button type="button" class="mbtn mbtn-cancel" style="flex:1;" onclick="closeBloodDonorRegisterModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <div id="bloodRegConfirmStep" style="display:none;">
+      <div class="blood-confirm-ico"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="modal-title">Registration confirmed</div>
+      <p class="modal-sub" style="text-align:center;">You are now in our donor network. Thank you for offering to save lives.</p>
+      <div id="bloodRegConfirmSummary"></div>
+      <div class="modal-btns" style="margin-top: 20px;">
+        <button type="button" class="mbtn mbtn-save" style="width:100%;" onclick="closeBloodDonorRegisterModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  CONTACT DONOR MODAL  -->
+<div class="overlay" id="bloodDonorContactModal">
+  <div class="modal-box blood-contact-modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="bloodDonorContactTitle">Donor details</div>
+    <div id="bloodDonorContactBody"></div>
+    <div class="modal-btns" style="margin-top: 20px;">
+      <button type="button" class="mbtn mbtn-cancel" style="width:100%;" onclick="closeBloodDonorContactModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!--  BOOK APPOINTMENT MODAL  -->
+<div class="overlay" id="appointmentBookModal">
+  <div class="modal-box family-add-modal appt-book-modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Book appointment</div>
+    <p class="modal-sub" id="apptBookModalHint">Complete the details below. You can change visit type anytime.</p>
+    <form id="appointmentBookForm" onsubmit="submitAppointmentBooking(event)">
+      <div class="family-add-field">
+        <label>Visit type</label>
+        <div class="appt-type-toggle" id="apptModalTypeToggle" role="group">
+          <button type="button" class="appt-type-btn" data-type="in-person" id="apptModalBtnInPerson"><i class="fa-solid fa-hospital-user"></i> In-Person</button>
+          <button type="button" class="appt-type-btn" data-type="virtual" id="apptModalBtnVirtual"><i class="fa-solid fa-video"></i> Virtual</button>
+        </div>
+        <input type="hidden" id="apptBookTypeField" value="in-person">
+      </div>
+      <div class="family-add-field">
+        <label for="apptBookHospital">Hospital</label>
+        <select id="apptBookHospital" required>
+          <option value="">Select a hospital</option>
+          <option value="nex-city">HealthNexus City Hospital</option>
+          <option value="nex-west">HealthNexus West Wing Clinic</option>
+          <option value="nex-heart">Nexus Heart &amp; Specialty Center</option>
+        </select>
+      </div>
+      <div class="family-add-field">
+        <label for="apptBookDoctor">Doctor</label>
+        <select id="apptBookDoctor" required disabled>
+          <option value="">Select a hospital first</option>
+        </select>
+      </div>
+      <div class="family-add-field">
+        <label for="apptBookDate">Date</label>
+        <input type="date" id="apptBookDate" required>
+      </div>
+      <div class="family-add-field">
+        <label for="apptBookTime">Time</label>
+        <select id="apptBookTime" required>
+          <option value="">Select time</option>
+          <option value="9:00 AM">9:00 AM</option>
+          <option value="10:00 AM">10:00 AM</option>
+          <option value="11:00 AM">11:00 AM</option>
+          <option value="2:00 PM">2:00 PM</option>
+          <option value="3:00 PM">3:00 PM</option>
+          <option value="4:30 PM">4:30 PM</option>
+        </select>
+      </div>
+      <div class="modal-btns" style="justify-content: stretch; flex-wrap: wrap; margin-top: 8px;">
+        <button type="submit" class="mbtn mbtn-save" style="flex:1;">Confirm booking</button>
+        <button type="button" class="mbtn mbtn-cancel" style="flex:1;" onclick="closeAppointmentBookModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Scripts -->
+<script src="components.js"></script>
+<script type="module" src="script.js"></script>
+<!-- Core Navigation (Standard Script for immediate global access) -->
+<script>
+  window.switchPatView = (view, li) => {
+    // 1. Update Sidebar UI
+    const navItems = document.querySelectorAll('.sb-nav li');
+    navItems.forEach(item => item.classList.remove('active'));
+    
+    if (li) {
+      li.classList.add('active');
+    } else {
+      // Find the corresponding sidebar item if called from elsewhere
+      navItems.forEach(item => {
+        const onclickAttr = item.getAttribute('onclick') || '';
+        if (onclickAttr.includes("'" + view + "'")) {
+          item.classList.add('active');
+        }
+      });
+    }
+
+    // 2. Switch View Containers
+    document.querySelectorAll('.dash-view').forEach(v => v.classList.remove('active-view'));
+    const targetId = 'view' + view.charAt(0).toUpperCase() + view.slice(1);
+    const target = document.getElementById(targetId);
+    if (target) target.classList.add('active-view');
+
+    // 3. Update Topbar Title
+    const titleNode = document.getElementById('patDashboardTitle');
+    const greetingNode = document.getElementById('patTopbarGreeting');
+    
+    if (titleNode) {
+      if (view === 'dashboard') {
+        titleNode.innerText = 'Patient Dashboard';
+        if (greetingNode) {
+          const userName = localStorage.getItem('nexus_user_name') || 'User';
+          const firstName = userName.split(' ')[0];
+          greetingNode.innerText = `Hi, ${firstName}`;
+          greetingNode.style.display = 'block';
+        }
+      } else {
+        const titles = {
+          appointments: 'Appointments',
+          bloodDonation: 'Blood Donation Center',
+          familyConnect: 'Family Connect',
+          aiAssistant: 'AI Assistant',
+          profile: 'My Profile'
+        };
+        titleNode.innerText = titles[view] || (view.charAt(0).toUpperCase() + view.slice(1));
+        if (greetingNode) greetingNode.style.display = 'none';
+      }
+    }
+  };
+
+  // Modal Handlers
+  window.openSOS = () => {
+    const modal = document.getElementById('sosModal');
+    if (modal) modal.classList.add('open');
+  };
+  window.closeSOS = () => {
+    const modal = document.getElementById('sosModal');
+    if (modal) modal.classList.remove('open');
+  };
+  window.confirmSOS = () => { 
+    window.closeSOS(); 
+    const msg = ' Emergency services notified! Help is on the way.';
+    if (window.app && window.app.showToast) {
+      window.app.showToast(msg, 'success');
+    } else {
+      alert(msg);
+    }
+  };
+
+  window.toggleSidebar = () => {
+    const sidebar = document.getElementById('patSidebar');
+    if (sidebar) sidebar.classList.toggle('collapsed');
+  };
+
+  // Global toast helper for inline onclick handlers
+  window.toast = (msg) => {
+    if (window.app && window.app.showToast) {
+      window.app.showToast(msg, 'info');
+    } else {
+      const t = document.getElementById('toast');
+      if (t) {
+        t.textContent = msg;
+        t.style.transform = 'translateY(0)';
+        t.style.opacity = '1';
+        setTimeout(() => { t.style.transform = 'translateY(80px)'; t.style.opacity = '0'; }, 3000);
+      }
+    }
+  };
+
+  function normalizeBloodGroup(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    let s = raw.trim().toUpperCase().replace(/\s+/g, '');
+    s = s.replace(/POSITIVE/g, '+').replace(/NEGATIVE/g, '-');
+    return s;
+  }
+
+  function escapeBloodHtml(s) {
+    if (s == null || s === '') return '—';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function donorCardIsAvailable(card) {
+    const chip = card.querySelector('.chip');
+    return chip && chip.textContent.trim() === 'Available';
+  }
+
+  function clearBloodDonorSearchResultsPanel() {
+    const panel = document.getElementById('bloodDonorSearchResults');
+    if (!panel) return;
+    panel.style.display = 'none';
+    panel.innerHTML = '';
+  }
+
+  function renderBloodDonorSearchResultsPanel(matches, bloodGroup) {
+    const panel = document.getElementById('bloodDonorSearchResults');
+    if (!panel) return;
+    panel.style.display = 'block';
+    if (!matches.length) {
+      panel.innerHTML = `
+        <div class="blood-donor-search-results-title">Available donors · ${escapeBloodHtml(bloodGroup)}</div>
+        <div class="blood-donor-search-empty">No donors with this blood group are marked <strong>Available</strong> in this demo (some may show as Recent in the list below).</div>
+      `;
+      return;
+    }
+    const rows = matches.map((m) => {
+      const tel = (m.contact || '').replace(/\s/g, '');
+      const contactHtml = m.contact
+        ? `<a href="tel:${escapeBloodHtml(tel)}">${escapeBloodHtml(m.contact)}</a>`
+        : '—';
+      return `
+        <div class="blood-donor-match-row">
+          <div class="blood-donor-match-name">${escapeBloodHtml(m.name)}</div>
+          <div class="blood-donor-match-contact"><span style="opacity:0.85;">Contact:</span> ${contactHtml}</div>
+        </div>`;
+    }).join('');
+    panel.innerHTML = `
+      <div class="blood-donor-search-results-title">Available donors · ${escapeBloodHtml(bloodGroup)}</div>
+      ${rows}
+    `;
+  }
+
+  window.searchNearbyDonors = function () {
+    const input = document.getElementById('bloodDonorGroupInput');
+    const hint = document.getElementById('bloodDonorHintText');
+    const grid = document.getElementById('bloodDonorsGrid');
+    if (!input || !grid) return;
+
+    const q = normalizeBloodGroup(input.value);
+    const cards = grid.querySelectorAll('.stat-card[data-donor-blood]');
+
+    if (!q) {
+      cards.forEach((card) => { card.style.display = ''; });
+      clearBloodDonorSearchResultsPanel();
+      if (hint) {
+        hint.innerHTML = 'Enter a blood group and tap <strong>Search</strong> to filter donors. Leave empty and search to show <strong>all</strong>.';
+      }
+      toast('Showing all donors.');
+      return;
+    }
+
+    let shown = 0;
+    const availableMatches = [];
+    cards.forEach((card) => {
+      const bg = normalizeBloodGroup(card.getAttribute('data-donor-blood') || '');
+      const match = bg === q;
+      card.style.display = match ? '' : 'none';
+      if (match) {
+        shown++;
+        if (donorCardIsAvailable(card)) {
+          availableMatches.push({
+            name: card.getAttribute('data-donor-name') || '—',
+            contact: card.getAttribute('data-donor-contact') || '',
+          });
+        }
+      }
+    });
+
+    if (shown === 0) {
+      if (hint) {
+        hint.innerHTML = `No <strong>${q}</strong> donors listed in this demo. Try <strong>O+</strong>, <strong>A+</strong>, <strong>B+</strong>, or <strong>AB-</strong>.`;
+      }
+      clearBloodDonorSearchResultsPanel();
+    } else {
+      const availCount = availableMatches.length;
+      if (hint) {
+        hint.innerHTML = availCount
+          ? `<strong>${availCount}</strong> available donor${availCount === 1 ? '' : 's'} for <strong>${q}</strong> — name and contact below (demo · ~2 km).`
+          : `<strong>${shown}</strong> donor${shown === 1 ? '' : 's'} match <strong>${q}</strong>; none marked Available — see cards below.`;
+      }
+      renderBloodDonorSearchResultsPanel(availableMatches, q);
+    }
+
+    if (window.app && window.app.showToast) {
+      window.app.showToast(shown ? `Found ${shown} matching donor(s).` : 'No matches — try another group.', shown ? 'success' : 'info');
+    }
+  };
+
+  function applyBloodDonorRegisteredButtonState() {
+    const btn = document.getElementById('bloodDonorRegisterBtn');
+    if (!btn) return;
+    btn.textContent = 'Register';
+    btn.disabled = false;
+    btn.style.opacity = localStorage.getItem('nexus_blood_donor_registered') === '1' ? '0.95' : '1';
+    btn.style.cursor = 'pointer';
+  }
+
+  window.fillBloodRegConfirmSummary = function (profile) {
+    const el = document.getElementById('bloodRegConfirmSummary');
+    if (!el || !profile) return;
+    el.innerHTML = `
+      <dl class="blood-detail-list">
+        <dt>Name</dt><dd>${escapeBloodHtml(profile.name)}</dd>
+        <dt>Age</dt><dd>${escapeBloodHtml(profile.age)}</dd>
+        <dt>Gender</dt><dd>${escapeBloodHtml(profile.gender)}</dd>
+        <dt>Location</dt><dd>${escapeBloodHtml(profile.location)}</dd>
+        <dt>Blood group</dt><dd>${escapeBloodHtml(profile.bloodGroup)}</dd>
+        <dt>Contact</dt><dd>${escapeBloodHtml(profile.contact)}</dd>
+      </dl>
+    `;
+  };
+
+  window.openBloodDonorRegistration = function () {
+    const modal = document.getElementById('bloodDonorRegisterModal');
+    const formStep = document.getElementById('bloodRegFormStep');
+    const confirmStep = document.getElementById('bloodRegConfirmStep');
+    if (!modal || !formStep || !confirmStep) return;
+
+    const registered = localStorage.getItem('nexus_blood_donor_registered') === '1';
+    let profile = null;
+    try {
+      profile = JSON.parse(localStorage.getItem('nexus_blood_donor_profile') || 'null');
+    } catch (e) {
+      profile = null;
+    }
+
+    if (registered && profile && typeof profile === 'object') {
+      formStep.style.display = 'none';
+      confirmStep.style.display = 'block';
+      window.fillBloodRegConfirmSummary(profile);
+    } else {
+      formStep.style.display = 'block';
+      confirmStep.style.display = 'none';
+      const f = document.getElementById('bloodDonorRegForm');
+      if (f) f.reset();
+    }
+    modal.classList.add('open');
+  };
+
+  window.closeBloodDonorRegisterModal = function () {
+    const modal = document.getElementById('bloodDonorRegisterModal');
+    if (modal) modal.classList.remove('open');
+  };
+
+  window.submitBloodDonorRegistration = function (e) {
+    if (e) e.preventDefault();
+    const name = (document.getElementById('bloodRegName')?.value || '').trim();
+    const ageRaw = document.getElementById('bloodRegAge')?.value;
+    const gender = (document.getElementById('bloodRegGender')?.value || '').trim();
+    const location = (document.getElementById('bloodRegLocation')?.value || '').trim();
+    const bloodGroup = (document.getElementById('bloodRegBloodGroup')?.value || '').trim();
+    const contact = (document.getElementById('bloodRegContact')?.value || '').trim();
+
+    const age = ageRaw !== '' && ageRaw !== undefined ? parseInt(ageRaw, 10) : NaN;
+    const digits = contact.replace(/\D/g, '');
+
+    if (!name) {
+      if (window.app && window.app.showToast) window.app.showToast('Please enter your name.', 'error');
+      else toast('Please enter your name.');
+      return;
+    }
+    if (Number.isNaN(age) || age < 18 || age > 70) {
+      if (window.app && window.app.showToast) window.app.showToast('Age must be between 18 and 70.', 'error');
+      else toast('Age must be between 18 and 70.');
+      return;
+    }
+    if (!gender) {
+      if (window.app && window.app.showToast) window.app.showToast('Please select gender.', 'error');
+      else toast('Please select gender.');
+      return;
+    }
+    if (!location) {
+      if (window.app && window.app.showToast) window.app.showToast('Please enter your location.', 'error');
+      else toast('Please enter your location.');
+      return;
+    }
+    if (!bloodGroup) {
+      if (window.app && window.app.showToast) window.app.showToast('Please enter your blood group.', 'error');
+      else toast('Please enter your blood group.');
+      return;
+    }
+    if (!contact || digits.length < 10) {
+      if (window.app && window.app.showToast) window.app.showToast('Enter a valid contact number (at least 10 digits).', 'error');
+      else toast('Enter a valid contact number.');
+      return;
+    }
+
+    const profile = {
+      name,
+      age: String(age),
+      gender,
+      location,
+      bloodGroup,
+      contact,
+    };
+    localStorage.setItem('nexus_blood_donor_profile', JSON.stringify(profile));
+    localStorage.setItem('nexus_blood_donor_registered', '1');
+
+    const formStep = document.getElementById('bloodRegFormStep');
+    const confirmStep = document.getElementById('bloodRegConfirmStep');
+    if (formStep) formStep.style.display = 'none';
+    if (confirmStep) confirmStep.style.display = 'block';
+    window.fillBloodRegConfirmSummary(profile);
+    applyBloodDonorRegisteredButtonState();
+
+    if (window.app && window.app.showToast) {
+      window.app.showToast('Thank you — you are registered in the donor network.', 'success');
+    } else {
+      toast('Registered as a blood donor. Thank you!');
+    }
+  };
+
+  window.openBloodDonorContactModal = function (btn) {
+    const card = btn && btn.closest ? btn.closest('[data-donor-name]') : null;
+    const modal = document.getElementById('bloodDonorContactModal');
+    const titleEl = document.getElementById('bloodDonorContactTitle');
+    const bodyEl = document.getElementById('bloodDonorContactBody');
+    if (!card || !modal || !bodyEl) return;
+
+    const name = card.getAttribute('data-donor-name') || '—';
+    const age = card.getAttribute('data-donor-age') || '—';
+    const gender = card.getAttribute('data-donor-gender') || '—';
+    const contact = card.getAttribute('data-donor-contact') || '—';
+
+    if (titleEl) titleEl.textContent = name;
+    bodyEl.innerHTML = `
+      <dl class="blood-detail-list">
+        <dt>Name</dt><dd>${escapeBloodHtml(name)}</dd>
+        <dt>Age</dt><dd>${escapeBloodHtml(age)}</dd>
+        <dt>Gender</dt><dd>${escapeBloodHtml(gender)}</dd>
+        <dt>Contact</dt><dd>${escapeBloodHtml(contact)}</dd>
+      </dl>
+    `;
+    modal.classList.add('open');
+  };
+
+  window.closeBloodDonorContactModal = function () {
+    const modal = document.getElementById('bloodDonorContactModal');
+    if (modal) modal.classList.remove('open');
+  };
+
+  function syncApptBookTypeUI(container, type) {
+    if (!container) return;
+    container.querySelectorAll('.appt-type-btn').forEach((btn) => {
+      const t = btn.getAttribute('data-type');
+      const on = t === type;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function getApptBookTypeFromMainToggle() {
+    const active = document.querySelector('#apptBookTypeToggle .appt-type-btn.active');
+    return active && active.getAttribute('data-type') ? active.getAttribute('data-type') : 'in-person';
+  }
+
+  /** Demo: doctors available per hospital (value format: Name|Specialty) */
+  const APPOINTMENT_DOCTORS_BY_HOSPITAL = {
+    'nex-city': [
+      { value: 'Dr. Ananya Gupta|Endocrinologist', label: 'Dr. Ananya Gupta — Endocrinologist' },
+      { value: 'Dr. Sunita Rao|General Physician', label: 'Dr. Sunita Rao — General Physician' },
+      { value: 'Dr. Ravi Kumar|Dermatologist', label: 'Dr. Ravi Kumar — Dermatologist' },
+    ],
+    'nex-west': [
+      { value: 'Dr. Ravi Kumar|Dermatologist', label: 'Dr. Ravi Kumar — Dermatologist' },
+      { value: 'Dr. Priya Nair|Neurologist', label: 'Dr. Priya Nair — Neurologist' },
+      { value: 'Dr. Sunita Rao|General Physician', label: 'Dr. Sunita Rao — General Physician' },
+    ],
+    'nex-heart': [
+      { value: 'Dr. Vikash Mehta|Cardiologist', label: 'Dr. Vikash Mehta — Cardiologist' },
+      { value: 'Dr. Ananya Gupta|Endocrinologist', label: 'Dr. Ananya Gupta — Endocrinologist' },
+      { value: 'Dr. Priya Nair|Neurologist', label: 'Dr. Priya Nair — Neurologist' },
+    ],
+  };
+
+  function populateApptDoctorsForHospital(hospitalId) {
+    const sel = document.getElementById('apptBookDoctor');
+    if (!sel) return;
+    sel.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = '';
+    ph.textContent = hospitalId ? 'Select a doctor' : 'Select a hospital first';
+    sel.appendChild(ph);
+    const list = hospitalId ? APPOINTMENT_DOCTORS_BY_HOSPITAL[hospitalId] : null;
+    if (!list || !list.length) {
+      sel.disabled = true;
+      return;
+    }
+    sel.disabled = false;
+    list.forEach((d) => {
+      const o = document.createElement('option');
+      o.value = d.value;
+      o.textContent = d.label;
+      sel.appendChild(o);
+    });
+  }
+
+  function buildAppointmentCardEl(docName, spec, dateFormatted, timeStr, type, hospitalName) {
+    const isVirt = type === 'virtual';
+    const card = document.createElement('div');
+    card.className = 'appt-card';
+    const iconClass = isVirt ? 'virtual' : 'in-person';
+    const iconFa = isVirt ? 'fa-video' : 'fa-calendar-days';
+    const badgeClass = isVirt ? 'virtual' : 'in-person';
+    const badgeText = isVirt ? 'Virtual' : 'In-Person';
+    card.innerHTML = `
+      <div class="appt-left">
+        <div class="appt-icon ${iconClass}"><i class="fa-solid ${iconFa}"></i></div>
+        <div class="appt-info">
+          <div class="appt-doc-name"></div>
+          <div class="appt-doc-spec"></div>
+          <div class="appt-hospital"></div>
+        </div>
+      </div>
+      <div class="appt-right">
+        <div class="appt-timing">
+          <div class="appt-date"></div>
+          <div class="appt-time"></div>
+        </div>
+        <div class="appt-badge ${badgeClass}"></div>
+      </div>
+    `;
+    card.querySelector('.appt-doc-name').textContent = docName;
+    card.querySelector('.appt-doc-spec').textContent = spec;
+    const hospEl = card.querySelector('.appt-hospital');
+    if (hospEl) {
+      hospEl.textContent = hospitalName ? hospitalName : '';
+      hospEl.style.display = hospitalName ? '' : 'none';
+    }
+    card.querySelector('.appt-date').textContent = dateFormatted;
+    card.querySelector('.appt-time').textContent = timeStr;
+    card.querySelector('.appt-badge').textContent = badgeText;
+    return card;
+  }
+
+  function wireApptTypeToggle(containerEl, onChange) {
+    if (!containerEl) return;
+    containerEl.querySelectorAll('.appt-type-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.getAttribute('data-type');
+        syncApptBookTypeUI(containerEl, type);
+        if (onChange) onChange(type);
+      });
+    });
+  }
+
+  window.openAppointmentBookModal = function () {
+    const type = getApptBookTypeFromMainToggle();
+    const form = document.getElementById('appointmentBookForm');
+    if (form) form.reset();
+    const hidden = document.getElementById('apptBookTypeField');
+    if (hidden) hidden.value = type;
+    syncApptBookTypeUI(document.getElementById('apptModalTypeToggle'), type);
+    const dateIn = document.getElementById('apptBookDate');
+    if (dateIn) {
+      const now = new Date();
+      const iso = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+      dateIn.min = iso;
+      dateIn.value = '';
+    }
+    const hospSel = document.getElementById('apptBookHospital');
+    if (hospSel) hospSel.selectedIndex = 0;
+    populateApptDoctorsForHospital('');
+    const timeSel = document.getElementById('apptBookTime');
+    if (timeSel) timeSel.selectedIndex = 0;
+    const modal = document.getElementById('appointmentBookModal');
+    if (modal) modal.classList.add('open');
+  };
+
+  window.closeAppointmentBookModal = function () {
+    const m = document.getElementById('appointmentBookModal');
+    if (m) m.classList.remove('open');
+  };
+
+  window.submitAppointmentBooking = function (e) {
+    if (e) e.preventDefault();
+    const type = (document.getElementById('apptBookTypeField') || {}).value || 'in-person';
+    const hospSel = document.getElementById('apptBookHospital');
+    const hospitalId = hospSel && hospSel.value;
+    const hospitalName = hospSel && hospSel.selectedIndex > 0
+      ? (hospSel.options[hospSel.selectedIndex].textContent || '').trim()
+      : '';
+    const docVal = (document.getElementById('apptBookDoctor') || {}).value || '';
+    const parts = docVal.split('|');
+    const docName = (parts[0] || '').trim();
+    const spec = (parts[1] || '').trim();
+    const dateVal = document.getElementById('apptBookDate') && document.getElementById('apptBookDate').value;
+    const timeStr = document.getElementById('apptBookTime') && document.getElementById('apptBookTime').value;
+    if (!hospitalId || !docVal || !dateVal || !timeStr) {
+      if (window.app && window.app.showToast) window.app.showToast('Please select hospital, doctor, date, and time.', 'error');
+      else toast('Please complete all fields.');
+      return;
+    }
+    const d = new Date(dateVal + 'T12:00:00');
+    const dateFormatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const list = document.getElementById('upcomingAppointmentsList');
+    if (!list) return;
+    const card = buildAppointmentCardEl(docName, spec, dateFormatted, timeStr, type, hospitalName);
+    list.insertBefore(card, list.firstChild);
+    window.closeAppointmentBookModal();
+    const mode = type === 'virtual' ? 'Virtual' : 'In-Person';
+    if (window.app && window.app.showToast) {
+      window.app.showToast(`Appointment booked — ${docName} at ${hospitalName} (${mode}).`, 'success');
+    } else {
+      toast('Appointment booked.');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    applyBloodDonorRegisteredButtonState();
+    const inp = document.getElementById('bloodDonorGroupInput');
+    if (inp) {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          searchNearbyDonors();
+        }
+      });
+    }
+
+    const bloodRegModal = document.getElementById('bloodDonorRegisterModal');
+    if (bloodRegModal) {
+      bloodRegModal.addEventListener('click', (e) => {
+        if (e.target === bloodRegModal) window.closeBloodDonorRegisterModal();
+      });
+    }
+    const bloodContactModal = document.getElementById('bloodDonorContactModal');
+    if (bloodContactModal) {
+      bloodContactModal.addEventListener('click', (e) => {
+        if (e.target === bloodContactModal) window.closeBloodDonorContactModal();
+      });
+    }
+
+    wireApptTypeToggle(document.getElementById('apptBookTypeToggle'));
+    wireApptTypeToggle(document.getElementById('apptModalTypeToggle'), (t) => {
+      const h = document.getElementById('apptBookTypeField');
+      if (h) h.value = t;
+    });
+    const appointmentBookModal = document.getElementById('appointmentBookModal');
+    if (appointmentBookModal) {
+      appointmentBookModal.addEventListener('click', (e) => {
+        if (e.target === appointmentBookModal) window.closeAppointmentBookModal();
+      });
+    }
+    const apptHospSel = document.getElementById('apptBookHospital');
+    if (apptHospSel) {
+      apptHospSel.addEventListener('change', () => {
+        populateApptDoctorsForHospital(apptHospSel.value);
+      });
+    }
+  });
+</script>
+
+<!-- Module-based App Logic (app comes from script.js → window.app) -->
+<script type="module">
+  /*  Date  */
+  const updateDates = () => {
+    const topDate = document.getElementById('topDate');
+    const scoreDay = document.getElementById('scoreDay');
+    if (topDate) topDate.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    if (scoreDay) scoreDay.textContent = '';
+  };
+
+  /*  Vitals: random 7-day series + score ring / bars  */
+  let chart = null;
+  const ctxEl = document.getElementById('vitalChart')?.getContext('2d');
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const RING_C = 2 * Math.PI * 65;
+
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  function weekSeriesEnd(last, step, minV, maxV, len = 7, roundFn = (x) => Math.round(x * 10) / 10) {
+    const out = [];
+    let v = last;
+    for (let i = 0; i < len; i++) {
+      out.unshift(roundFn(v));
+      v = Math.min(maxV, Math.max(minV, v + (Math.random() - 0.5) * step));
+    }
+    return out;
+  }
+
+  function bpSubscore(sys, dia) {
+    let s = 100;
+    if (sys > 145) s -= 40;
+    else if (sys > 135) s -= 28;
+    else if (sys > 125) s -= 14;
+    else if (sys > 120) s -= 6;
+    if (dia > 92) s -= 22;
+    else if (dia > 85) s -= 10;
+    return Math.max(0, Math.min(100, s));
+  }
+
+  function sugarSubscore(val) {
+    if (val < 65) return 55;
+    if (val <= 99) return 96 + rnd(0, 4);
+    if (val <= 110) return 72 + rnd(0, 6);
+    if (val <= 125) return 58 + rnd(0, 8);
+    return 40 + rnd(0, 15);
+  }
+
+  function hemoSubscore(val) {
+    if (val >= 13.5 && val <= 17.5) return 94 + rnd(0, 6);
+    if (val >= 12.5 && val < 13.5) return 68 + rnd(0, 10);
+    if (val >= 11 && val < 12.5) return 52;
+    return 45;
+  }
+
+  function buildSeriesForVitals(v) {
+    const sys = v.bp.sys;
+    const dia = v.bp.dia;
+    return {
+      bp: weekSeriesEnd(sys, rnd(3, 7), Math.max(95, sys - 18), Math.min(145, sys + 12), 7, (x) => Math.round(x)),
+      sugar: weekSeriesEnd(v.sugar.val, rnd(8, 16), Math.max(72, v.sugar.val - 28), Math.min(165, v.sugar.val + 22), 7, (x) => Math.round(x)),
+      hemo: weekSeriesEnd(v.hemo.val, rnd(0.25, 0.55), Math.max(11.2, v.hemo.val - 1.1), Math.min(16.5, v.hemo.val + 0.9), 7, (x) => Math.round(x * 10) / 10),
+    };
+  }
+
+  function randomDemoVitals() {
+    const sys = Math.round(rnd(112, 132));
+    const dia = Math.round(rnd(72, 88));
+    return {
+      bp: { sys, dia },
+      sugar: { val: Math.round(rnd(86, 122)) },
+      hemo: { val: Math.round(rnd(128, 152)) / 10 },
+    };
+  }
+
+  window.applyPatientDashboardMetrics = function (vitals) {
+    const v = {
+      bp: { sys: Number(vitals.bp?.sys) || 120, dia: Number(vitals.bp?.dia) || 80 },
+      sugar: { val: Number(vitals.sugar?.val) || 108 },
+      hemo: { val: Number(vitals.hemo?.val) || 13.8 },
+    };
+
+    window.VITAL_CHART_SERIES = buildSeriesForVitals(v);
+
+    const dashCards = document.querySelectorAll('#viewDashboard .g3 .stat-card');
+    if (dashCards[0]) {
+      const el = dashCards[0].querySelector('.stat-val');
+      if (el) el.innerHTML = `${v.bp.sys}<span class="stat-unit">/${v.bp.dia} mmHg</span>`;
+    }
+    if (dashCards[1]) {
+      const el = dashCards[1].querySelector('.stat-val');
+      if (el) el.innerHTML = `${v.sugar.val}<span class="stat-unit">mg/dL</span>`;
+    }
+    if (dashCards[2]) {
+      const el = dashCards[2].querySelector('.stat-val');
+      if (el) el.innerHTML = `${v.hemo.val}<span class="stat-unit">g/dL</span>`;
+    }
+
+    const sBp = bpSubscore(v.bp.sys, v.bp.dia);
+    const sSg = sugarSubscore(v.sugar.val);
+    const sHb = hemoSubscore(v.hemo.val);
+    const overall = Math.round((sBp + sSg + sHb) / 3);
+
+    const ring = document.getElementById('ringFill');
+    const scoreNum = document.getElementById('scoreNum');
+    if (ring) {
+      ring.style.strokeDasharray = String(RING_C);
+      ring.style.strokeDashoffset = String(RING_C * (1 - overall / 100));
+    }
+    if (scoreNum) scoreNum.textContent = String(overall);
+
+    const riskPill = document.getElementById('riskPill');
+    const riskLabel = document.getElementById('riskLabel');
+    if (riskPill && riskLabel) {
+      riskPill.classList.remove('pill-low', 'pill-mod', 'pill-high');
+      if (overall >= 78) {
+        riskPill.classList.add('pill-low');
+        riskLabel.textContent = 'Low Risk';
+      } else if (overall >= 58) {
+        riskPill.classList.add('pill-mod');
+        riskLabel.textContent = 'Moderate';
+      } else {
+        riskPill.classList.add('pill-high');
+        riskLabel.textContent = 'Elevated';
+      }
+    }
+
+    const setBar = (idFill, idSc, pct, label) => {
+      const el = document.getElementById(idFill);
+      const sc = document.getElementById(idSc);
+      if (el) el.style.width = `${Math.round(pct)}%`;
+      if (sc) sc.textContent = String(Math.round(pct));
+    };
+    setBar('bp-bar', 'bp-sc', sBp);
+    setBar('sg-bar', 'sg-sc', sSg);
+    setBar('hb-bar', 'hb-sc', sHb);
+
+    const mini = (id, pct) => {
+      const el = document.getElementById(id);
+      if (el) el.style.width = `${Math.min(96, Math.max(38, pct))}%`;
+    };
+    mini('bp-mini', 42 + sBp * 0.52);
+    mini('sg-mini', 42 + sSg * 0.52);
+    mini('hb-mini', 42 + sHb * 0.52);
+
+    const setChip = (id, cls, text) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'chip ' + cls;
+      el.textContent = text;
+    };
+
+    if (v.bp.sys <= 120 && v.bp.dia <= 80) setChip('bp-chip', 'c-good', 'Normal');
+    else if (v.bp.sys <= 130 && v.bp.dia <= 85) setChip('bp-chip', 'c-warn', 'Elevated');
+    else setChip('bp-chip', 'c-high', 'High');
+
+    if (v.sugar.val <= 99) setChip('sg-chip', 'c-good', 'Normal');
+    else if (v.sugar.val <= 125) setChip('sg-chip', 'c-warn', 'Borderline');
+    else setChip('sg-chip', 'c-high', 'High');
+
+    if (v.hemo.val >= 13.5 && v.hemo.val <= 17.5) setChip('hb-chip', 'c-good', 'Healthy');
+    else if (v.hemo.val >= 12) setChip('hb-chip', 'c-warn', 'Low');
+    else setChip('hb-chip', 'c-high', 'Low');
+
+    const activeBtn = document.querySelector('.gtab.active');
+    let activeKey = 'bp';
+    if (activeBtn) {
+      const t = activeBtn.textContent || '';
+      if (t.includes('Sugar')) activeKey = 'sugar';
+      else if (t.includes('Hemoglobin')) activeKey = 'hemo';
+    }
+    if (typeof window.buildChart === 'function') window.buildChart(activeKey);
+  };
+
+  window.buildChart = (key) => {
+    if (!ctxEl) return;
+    if (chart) chart.destroy();
+
+    const series = window.VITAL_CHART_SERIES || {
+      bp: weekSeriesEnd(120, 5, 105, 132, 7, (x) => Math.round(x)),
+      sugar: weekSeriesEnd(100, 12, 78, 130, 7, (x) => Math.round(x)),
+      hemo: weekSeriesEnd(13.8, 0.4, 12.6, 14.8, 7, (x) => Math.round(x * 10) / 10),
+    };
+
+    const meta = {
+      bp: { label: 'Systolic BP (mmHg)', color: '#6c63ff' },
+      sugar: { label: 'Blood Sugar (mg/dL)', color: '#f59e0b' },
+      hemo: { label: 'Hemoglobin (g/dL)', color: '#00d4aa' },
+    };
+    const d = meta[key];
+    const data = series[key];
+    if (!d || !data) return;
+
+    chart = new Chart(ctxEl, {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [{
+          label: d.label,
+          data,
+          borderColor: d.color,
+          backgroundColor: d.color + '18',
+          pointBackgroundColor: d.color,
+          pointBorderColor: '#0b0f1a',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          tension: 0.38,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 600 },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' } },
+        },
+      },
+    });
+  };
+
+  window.switchChart = (key, btn) => {
+    document.querySelectorAll('.gtab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    window.buildChart(key);
+  };
+
+  /*  Initialization  */
+  document.addEventListener('DOMContentLoaded', async () => {
+    updateDates();
+    window.applyPatientDashboardMetrics(randomDemoVitals());
+    
+    // Modal click-to-close
+    const sosModal = document.getElementById('sosModal');
+    if (sosModal) {
+        sosModal.addEventListener('click', e => {
+            if (e.target === sosModal) window.closeSOS();
+        });
+    }
+    const familyAddModal = document.getElementById('familyAddModal');
+    if (familyAddModal) {
+        familyAddModal.addEventListener('click', e => {
+            if (e.target === familyAddModal) {
+                if (window.app && window.app.closeFamilyAddModal) window.app.closeFamilyAddModal();
+                else familyAddModal.classList.remove('open');
+            }
+        });
+    }
+  });
+</script>
+</body>
+</html>
