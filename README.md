@@ -159,9 +159,3 @@ netlify deploy --prod --dir=dist
 
 ---
 
-## 🛡️ Privacy & Security
-
-> ⚠️ As a prototype, all data is stored locally in the browser and not uploaded to external servers.
-
-HealthNexus is designed with security-first principles, built to integrate with **HIPAA** and **GDPR** compliant backends for end-to-end encryption in production.
-
