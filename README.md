@@ -95,7 +95,7 @@ HealthNexus/
 
 ### 1️⃣ Clone the repository
 ```bash
-git clone https://github.com/tejaram867/HealthNexus-.git
+git clone https://github.com/backpropbrigade-dev/Health-Nexus.git
 cd HealthNexus-
 ```
 
